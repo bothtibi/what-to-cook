@@ -1,6 +1,28 @@
 from src.db import execute, fetchall, fetchone
 
 
+def normalize_category(category):
+    raw = (category or "").strip()
+    key = raw.lower()
+    mapping = {
+        "leves": "Leves",
+        "főétel": "Főétel",
+        "foetel": "Főétel",
+        "reggeli": "Reggeli",
+        "vacsora": "Vacsora",
+    }
+    return mapping.get(key, raw)
+
+
+def _category_variants_for_filter(category):
+    normalized = normalize_category(category)
+    if normalized == "Főétel":
+        return ["Főétel", "foetel", "Foetel", "főétel"]
+    if normalized:
+        return [normalized, normalized.lower()]
+    return []
+
+
 def normalize_tags(tags_text):
     tags = [tag.strip().lower() for tag in tags_text.split(",") if tag.strip()]
     unique_tags = list(dict.fromkeys(tags))
@@ -20,7 +42,7 @@ def create_recipe(data):
         """,
         (
             data["name"],
-            data["category"],
+            normalize_category(data["category"]),
             normalize_tags(data["tags"]),
             data["prep_time_minutes"],
             data["difficulty"],
@@ -52,7 +74,7 @@ def update_recipe(recipe_id, data):
         """,
         (
             data["name"],
-            data["category"],
+            normalize_category(data["category"]),
             normalize_tags(data["tags"]),
             data["prep_time_minutes"],
             data["difficulty"],
@@ -143,8 +165,10 @@ def list_recipes(query="", category="", tag="", include_disliked=True):
         sql += " AND LOWER(name) LIKE ?"
         params.append(f"%{query.lower()}%")
     if category:
-        sql += " AND category = ?"
-        params.append(category)
+        variants = _category_variants_for_filter(category)
+        placeholders = ", ".join(["?"] * len(variants))
+        sql += f" AND category IN ({placeholders})"
+        params.extend(variants)
     if tag:
         sql += " AND LOWER(tags) LIKE ?"
         params.append(f"%{tag.lower()}%")
