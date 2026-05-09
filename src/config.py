@@ -4,6 +4,7 @@ import streamlit as st
 
 
 DEFAULT_CATEGORIES = ["leves", "foetel", "reggeli", "vacsora"]
+RECIPE_DIFFICULTIES = ["Könnyű", "Közepes", "Nehéz"]
 
 
 def get_secret(name, default=None):

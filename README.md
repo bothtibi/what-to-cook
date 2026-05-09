@@ -1,10 +1,10 @@
-# Csaladi fozes es receptkoveto (V1 MVP)
+# Csaladi fozes es receptkoveto (V2)
 
 Egyszeru, magyar nyelvu Streamlit app:
 - recept CRUD
-- ajanlo
-- history
-- JSON backup export
+- ajanlo (single + leves/foetel kombinacio)
+- history (lista + idovonal nezet)
+- JSON backup export/import
 - egyszeru shared login
 
 ## Local futtatas
@@ -35,5 +35,5 @@ Ellenkezo esetben automatikusan a lokalis SQLite fallback (`DB_PATH`) marad akti
 - `src/recipes.py` - recipe CRUD + kereses
 - `src/history.py` - history mentes/listazas
 - `src/recommendations.py` - MVP ajanlo scoring
-- `src/backup.py` - JSON export
+- `src/backup.py` - JSON export/import
 - `src/ui/*` - Streamlit oldalak

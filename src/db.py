@@ -38,9 +38,12 @@ def execute(sql, params=()):
     if _use_turso():
         url = get_turso_database_url()
         token = get_turso_auth_token()
-        with libsql_client.create_client_sync(url=url, auth_token=token) as client:
-            client.execute(sql, list(params))
-        return
+        try:
+            with libsql_client.create_client_sync(url=url, auth_token=token) as client:
+                client.execute(sql, list(params))
+            return
+        except Exception:
+            pass
 
     conn = _sqlite_connection()
     with conn:
@@ -52,10 +55,13 @@ def fetchall(sql, params=()):
     if _use_turso():
         url = get_turso_database_url()
         token = get_turso_auth_token()
-        with libsql_client.create_client_sync(url=url, auth_token=token) as client:
-            result = client.execute(sql, list(params))
-            columns = list(getattr(result, "columns", []))
-            return [_row_to_dict(row, columns) for row in result.rows]
+        try:
+            with libsql_client.create_client_sync(url=url, auth_token=token) as client:
+                result = client.execute(sql, list(params))
+                columns = list(getattr(result, "columns", []))
+                return [_row_to_dict(row, columns) for row in result.rows]
+        except Exception:
+            pass
 
     conn = _sqlite_connection()
     rows = conn.execute(sql, params).fetchall()
@@ -68,6 +74,15 @@ def fetchone(sql, params=()):
     return rows[0] if rows else None
 
 
+def execute_many(sql, param_sets):
+    for params in param_sets:
+        execute(sql, params)
+
+
+def get_active_backend_name():
+    return "turso" if _use_turso() else "sqlite"
+
+
 def init_db():
     execute(
         """
@@ -77,12 +92,16 @@ def init_db():
             category TEXT NOT NULL,
             tags TEXT NOT NULL DEFAULT '',
             prep_time_minutes INTEGER NOT NULL DEFAULT 0,
-            difficulty TEXT NOT NULL DEFAULT '',
+            difficulty TEXT NOT NULL DEFAULT 'Közepes',
             ingredients_text TEXT NOT NULL DEFAULT '',
             instructions_text TEXT NOT NULL DEFAULT '',
             notes_text TEXT NOT NULL DEFAULT '',
             is_favorite INTEGER NOT NULL DEFAULT 0,
             is_blocked INTEGER NOT NULL DEFAULT 0,
+            favorite_tibi INTEGER NOT NULL DEFAULT 0,
+            favorite_melinda INTEGER NOT NULL DEFAULT 0,
+            dislike_tibi INTEGER NOT NULL DEFAULT 0,
+            dislike_melinda INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
@@ -100,5 +119,28 @@ def init_db():
             notes TEXT NOT NULL DEFAULT '',
             FOREIGN KEY(recipe_id) REFERENCES recipes(id)
         )
+        """
+    )
+    recipe_columns = {col["name"] for col in fetchall("PRAGMA table_info(recipes)")}
+    if "favorite_tibi" not in recipe_columns:
+        execute("ALTER TABLE recipes ADD COLUMN favorite_tibi INTEGER NOT NULL DEFAULT 0")
+    if "favorite_melinda" not in recipe_columns:
+        execute("ALTER TABLE recipes ADD COLUMN favorite_melinda INTEGER NOT NULL DEFAULT 0")
+    if "dislike_tibi" not in recipe_columns:
+        execute("ALTER TABLE recipes ADD COLUMN dislike_tibi INTEGER NOT NULL DEFAULT 0")
+    if "dislike_melinda" not in recipe_columns:
+        execute("ALTER TABLE recipes ADD COLUMN dislike_melinda INTEGER NOT NULL DEFAULT 0")
+    execute(
+        """
+        UPDATE recipes
+        SET favorite_tibi = 1
+        WHERE is_favorite = 1 AND favorite_tibi = 0 AND favorite_melinda = 0
+        """
+    )
+    execute(
+        """
+        UPDATE recipes
+        SET dislike_tibi = 1, dislike_melinda = 1
+        WHERE is_blocked = 1 AND dislike_tibi = 0 AND dislike_melinda = 0
         """
     )
