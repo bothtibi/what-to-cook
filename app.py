@@ -1,31 +1,41 @@
 import streamlit as st
 
-from utils.recipe_service import find_recipes
+from src.auth import is_authenticated, login_form, logout
+from src.db import init_db
+from src.ui.backup_page import render_backup_page
+from src.ui.history_page import render_history_page
+from src.ui.recipes_page import render_recipes_page
+from src.ui.recommendation_page import render_recommendation_page
+from src.ui.settings_page import render_settings_page
 
 
-st.set_page_config(page_title="What to Cook", layout="centered")
+st.set_page_config(page_title="Csaladi Fozes", layout="wide")
+init_db()
 
-st.title("What to Cook")
-st.write("Enter ingredients you have at home and get simple recipe ideas.")
+if not is_authenticated():
+    login_form()
+    st.stop()
 
-ingredients_text = st.text_input(
-    "Ingredients (comma-separated)",
-    placeholder="egg, tomato, onion",
-)
-max_time = st.slider("Max cooking time (minutes)", min_value=5, max_value=60, value=30)
-vegetarian_only = st.checkbox("Vegetarian only", value=False)
+with st.sidebar:
+    st.title("Menu")
+    page = st.radio(
+        "Oldalak",
+        options=["Ajanlo", "Receptek", "History", "Backup", "Beallitasok"],
+        label_visibility="collapsed",
+    )
+    if st.button("Kijelentkezes"):
+        logout()
+        st.rerun()
 
-if st.button("Find recipes"):
-    ingredients = [item.strip() for item in ingredients_text.split(",")]
-    results = find_recipes(ingredients, max_time, vegetarian_only)
+st.title("Csaladi fozes es receptkoveto")
 
-    if not results:
-        st.warning("No matches found. Try adding more ingredients or increasing max time.")
-    else:
-        st.success(f"Found {len(results)} recipe(s).")
-        for recipe in results:
-            with st.container(border=True):
-                st.subheader(recipe["name"])
-                st.write(recipe["description"])
-                st.write(f"Time: {recipe['max_time']} min")
-                st.write(f"Ingredients: {', '.join(recipe['ingredients'])}")
+if page == "Ajanlo":
+    render_recommendation_page()
+elif page == "Receptek":
+    render_recipes_page()
+elif page == "History":
+    render_history_page()
+elif page == "Backup":
+    render_backup_page()
+else:
+    render_settings_page()

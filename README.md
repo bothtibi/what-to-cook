@@ -1,17 +1,39 @@
-# What to Cook (Streamlit MVP)
+# Csaladi fozes es receptkoveto (V1 MVP)
 
-Simple Streamlit app that suggests recipes based on your ingredients.
+Egyszeru, magyar nyelvu Streamlit app:
+- recept CRUD
+- ajanlo
+- history
+- JSON backup export
+- egyszeru shared login
 
-## Run locally
+## Local futtatas
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Project structure
+## Streamlit secrets (opcionalis)
 
-- `app.py` - Streamlit entry point/UI
-- `utils/recipe_service.py` - recipe loading and filtering logic
-- `data/recipes.json` - small local dataset for MVP
-- `requirements.txt` - minimal dependency list
+Alapertelmezetten local fallback ertekeket hasznal. Deploymenthez ajanlott:
+
+- `APP_USERNAME`
+- `APP_PASSWORD`
+- `DB_PATH` (pl. `data/app.db`)
+- `TURSO_DATABASE_URL` (ha Turso-t hasznalsz)
+- `TURSO_AUTH_TOKEN` (ha Turso-t hasznalsz)
+
+Ha a Turso URL + token be van allitva es a `libsql-client` telepitve van, az app Turso-t hasznal.
+Ellenkezo esetben automatikusan a lokalis SQLite fallback (`DB_PATH`) marad aktiv.
+
+## Projekt struktura
+
+- `app.py` - belepesi pont, menu, oldalak
+- `src/auth.py` - login/session
+- `src/db.py` - SQLite kapcsolat es tabla init
+- `src/recipes.py` - recipe CRUD + kereses
+- `src/history.py` - history mentes/listazas
+- `src/recommendations.py` - MVP ajanlo scoring
+- `src/backup.py` - JSON export
+- `src/ui/*` - Streamlit oldalak
