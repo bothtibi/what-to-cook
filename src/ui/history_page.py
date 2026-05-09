@@ -17,7 +17,11 @@ def render_history_page():
         st.info("Nincs bejegyzes a megadott feltetelekkel.")
         return
 
-    st.caption(f"Osszesen {len(entries)} bejegyzes")
+    unique_recipes = len({item["recipe_id"] for item in entries})
+    col_a, col_b = st.columns(2)
+    col_a.metric("Bejegyzesek", len(entries))
+    col_b.metric("Kulonbozo receptek", unique_recipes)
+
     for item in entries:
         with st.container(border=True):
             st.markdown(f"**{item['cooked_date']} - {item['recipe_name']}**")

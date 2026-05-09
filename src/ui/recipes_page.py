@@ -51,13 +51,26 @@ def render_recipes_page():
         st.info("Nincs talalat.")
         return
 
-    st.caption(f"Osszesen {len(recipes)} recept")
+    fav_count = sum(1 for recipe in recipes if recipe["is_favorite"])
+    blocked_count = sum(1 for recipe in recipes if recipe["is_blocked"])
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Osszes recept", len(recipes))
+    m2.metric("Kedvencek", fav_count)
+    m3.metric("Tiltottak", blocked_count)
+
     for recipe in recipes:
         with st.container(border=True):
-            st.markdown(f"### {recipe['name']}")
-            st.write(f"Kategoria: {recipe['category']} | Ido: {recipe['prep_time_minutes']} perc")
+            head_col1, head_col2 = st.columns([3, 2])
+            head_col1.markdown(f"### {recipe['name']}")
+            flags = []
+            if recipe["is_favorite"]:
+                flags.append("kedvenc")
+            if recipe["is_blocked"]:
+                flags.append("tiltott")
+            suffix = f" | {', '.join(flags)}" if flags else ""
+            head_col2.caption(f"{recipe['category']} | {recipe['prep_time_minutes']} perc{suffix}")
             if recipe["tags"]:
-                st.write(f"Tagek: {recipe['tags']}")
+                st.caption(f"Tagek: {recipe['tags']}")
             st.write(recipe["ingredients_text"] or "-")
             st.write(recipe["instructions_text"] or "-")
 

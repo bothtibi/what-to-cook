@@ -9,20 +9,26 @@ from src.recommendations import recommend_recipes
 
 def render_recommendation_page():
     st.subheader("Mit fozzunk?")
-    category = st.selectbox("Kategoria (opcionalis)", [""] + DEFAULT_CATEGORIES)
-    limit = st.slider("Hany ajanlat legyen?", min_value=1, max_value=10, value=5)
+    col1, col2 = st.columns([2, 1])
+    category = col1.selectbox("Kategoria (opcionalis)", [""] + DEFAULT_CATEGORIES)
+    limit = col2.slider("Hany ajanlat legyen?", min_value=1, max_value=10, value=5)
 
     recipes = recommend_recipes(category=category, limit=limit)
     if not recipes:
         st.info("Nincs ajanlhato recept. Ellenorizd a receptlistat vagy a szuroket.")
         return
 
+    stat1, stat2 = st.columns(2)
+    stat1.metric("Javaslatok", len(recipes))
+    stat2.metric("Aktiv kategoria", category or "mind")
+
     for recipe in recipes:
         with st.container(border=True):
-            st.markdown(f"### {recipe['name']}")
-            st.write(f"Kategoria: {recipe['category']} | Ido: {recipe['prep_time_minutes']} perc")
+            top_col1, top_col2 = st.columns([3, 2])
+            top_col1.markdown(f"### {recipe['name']}")
+            top_col2.caption(f"Kategoria: {recipe['category']} | Ido: {recipe['prep_time_minutes']} perc")
             if recipe["tags"]:
-                st.write(f"Tagek: {recipe['tags']}")
+                st.caption(f"Tagek: {recipe['tags']}")
             st.write(recipe["ingredients_text"] or "-")
 
             with st.form(f"cook_{recipe['id']}"):
