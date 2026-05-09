@@ -2,7 +2,7 @@
 
 Egyszeru, magyar nyelvu Streamlit app:
 - recept CRUD
-- ajanlo (single + leves/foetel kombinacio)
+- ajanlo (single + leves/főétel kombinacio)
 - history (lista + idovonal nezet)
 - JSON backup export/import
 - egyszeru shared login

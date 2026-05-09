@@ -62,8 +62,8 @@ def recommend_recipes(category="", limit=5):
 
 
 def recommend_meal_combinations(limit=3):
-    soups = recommend_recipes(category="leves", limit=max(limit * 2, 4))
-    mains = recommend_recipes(category="foetel", limit=max(limit * 2, 4))
+    soups = recommend_recipes(category="Leves", limit=max(limit * 2, 4))
+    mains = recommend_recipes(category="Főétel", limit=max(limit * 2, 4))
 
     if not soups or not mains:
         return []
@@ -78,7 +78,7 @@ def recommend_meal_combinations(limit=3):
                     "main": main,
                     "score": combo_score,
                     "reasons": [
-                        "egyensuly: leves + foetel",
+                        "egyensúly: leves + főétel",
                         *soup["reasons"][:1],
                         *main["reasons"][:1],
                     ],

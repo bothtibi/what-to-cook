@@ -46,39 +46,39 @@ def _save_history_form(recipe, form_key_prefix, meal_group_id=""):
 
 
 def render_recommendation_page():
-    st.subheader("Mit fozzunk?")
+    st.subheader("Mit főzzünk?")
     mode_col, col1, col2 = st.columns([2, 2, 1])
     mode = mode_col.selectbox(
-        "Mod",
-        ["csak recept", "csak leves", "csak foetel", "leves + foetel"],
+        "Mód",
+        ["Csak recept", "Csak leves", "Csak főétel", "Leves + főétel"],
     )
-    category = col1.selectbox("Kategoria (opcionalis)", [""] + DEFAULT_CATEGORIES)
-    limit = col2.slider("Hany ajanlat legyen?", min_value=1, max_value=10, value=5)
+    category = col1.selectbox("Kategória (opcionális)", [""] + DEFAULT_CATEGORIES)
+    limit = col2.slider("Hány ajánlat legyen?", min_value=1, max_value=10, value=5)
 
-    if mode == "leves + foetel":
+    if mode == "Leves + főétel":
         combos = recommend_meal_combinations(limit=max(1, min(limit, 6)))
         if not combos:
-            st.info("Nincs eleg leves/foetel recept a kombinaciohoz.")
+            st.info("Nincs elég leves/főétel recept a kombinációhoz.")
             return
 
-        st.metric("Kombinaciok", len(combos))
+        st.metric("Kombinációk", len(combos))
         for idx, combo in enumerate(combos, start=1):
             soup_recipe = combo["soup"]["recipe"]
             main_recipe = combo["main"]["recipe"]
             meal_group_id = f"combo-{date.today().isoformat()}-{idx}"
             with st.container(border=True):
-                st.markdown(f"### #{idx} kombinacio")
+                st.markdown(f"### #{idx} kombináció")
                 left, right = st.columns(2)
                 with left:
                     st.markdown(f"**Leves:** {soup_recipe['name']}")
                     st.caption(f"{soup_recipe['prep_time_minutes']} perc")
                     _tag_chips(soup_recipe["tags"])
                 with right:
-                    st.markdown(f"**Foetel:** {main_recipe['name']}")
+                    st.markdown(f"**Főétel:** {main_recipe['name']}")
                     st.caption(f"{main_recipe['prep_time_minutes']} perc")
                     _tag_chips(main_recipe["tags"])
 
-                st.caption("Ajanlas oka: " + " | ".join(combo["reasons"]))
+                st.caption("Ajánlás oka: " + " | ".join(combo["reasons"]))
                 c1, c2 = st.columns(2)
                 with c1:
                     _save_history_form(soup_recipe, f"combo_soup_{idx}", meal_group_id=meal_group_id)
@@ -86,30 +86,30 @@ def render_recommendation_page():
                     _save_history_form(main_recipe, f"combo_main_{idx}", meal_group_id=meal_group_id)
         return
 
-    if mode == "csak leves":
-        effective_category = "leves"
-    elif mode == "csak foetel":
-        effective_category = "foetel"
+    if mode == "Csak leves":
+        effective_category = "Leves"
+    elif mode == "Csak főétel":
+        effective_category = "Főétel"
     else:
         effective_category = category
 
     recipes = recommend_recipes(category=effective_category, limit=limit)
     if not recipes:
-        st.info("Nincs ajanlhato recept. Ellenorizd a receptlistat vagy a szuroket.")
+        st.info("Nincs ajánlható recept. Ellenőrizd a receptlistát vagy a szűrőket.")
         return
 
     stat1, stat2 = st.columns(2)
     stat1.metric("Javaslatok", len(recipes))
-    stat2.metric("Aktiv kategoria", effective_category or "mind")
+    stat2.metric("Aktív kategória", effective_category or "Mind")
 
     for item in recipes:
         recipe = item["recipe"]
         with st.container(border=True):
             top_col1, top_col2 = st.columns([3, 2])
             top_col1.markdown(f"### {recipe['name']}")
-            top_col2.caption(f"Kategoria: {recipe['category']} | Ido: {recipe['prep_time_minutes']} perc")
+            top_col2.caption(f"Kategória: {recipe['category']} | Idő: {recipe['prep_time_minutes']} perc")
             _tag_chips(recipe["tags"])
             if item["reasons"]:
-                st.caption("Ajanlas oka: " + " | ".join(item["reasons"]))
+                st.caption("Ajánlás oka: " + " | ".join(item["reasons"]))
             st.write(recipe["ingredients_text"] or "-")
             _save_history_form(recipe, "single")

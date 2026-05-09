@@ -9,7 +9,7 @@ from src.ui.recommendation_page import render_recommendation_page
 from src.ui.settings_page import render_settings_page
 
 
-st.set_page_config(page_title="Csaladi Fozes", layout="wide")
+st.set_page_config(page_title="Családi főzés", layout="wide")
 init_db()
 
 st.markdown(
@@ -44,23 +44,23 @@ if not is_authenticated():
     st.stop()
 
 with st.sidebar:
-    st.title("Mit fozzunk?")
+    st.title("Mit főzzünk?")
     page = st.radio(
         "Oldalak",
-        options=["Javaslatok", "Receptek", "Elozmenyek", "Backup", "Beallitasok"],
+        options=["Javaslatok", "Receptek", "Előzmények", "Backup", "Beállítások"],
         label_visibility="collapsed",
     )
     if st.button("Kijelentkezes"):
         logout()
         st.rerun()
 
-st.title("Csaladi fozes es receptkoveto")
+st.title("Családi főzés és receptkövető")
 
 if page == "Javaslatok":
     render_recommendation_page()
 elif page == "Receptek":
     render_recipes_page()
-elif page == "Elozmenyek":
+elif page == "Előzmények":
     render_history_page()
 elif page == "Backup":
     render_backup_page()

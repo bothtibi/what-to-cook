@@ -144,3 +144,7 @@ def init_db():
         WHERE is_blocked = 1 AND dislike_tibi = 0 AND dislike_melinda = 0
         """
     )
+    execute("UPDATE recipes SET category = 'Leves' WHERE LOWER(category) IN ('leves')")
+    execute("UPDATE recipes SET category = 'Főétel' WHERE LOWER(category) IN ('foetel', 'főétel')")
+    execute("UPDATE recipes SET category = 'Reggeli' WHERE LOWER(category) IN ('reggeli')")
+    execute("UPDATE recipes SET category = 'Vacsora' WHERE LOWER(category) IN ('vacsora')")

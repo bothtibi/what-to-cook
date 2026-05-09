@@ -13,12 +13,12 @@ def _group_by_day(entries):
 
 
 def render_history_page():
-    st.subheader("Elozmenyek")
+    st.subheader("Előzmények")
     col1, col2, col3, col4 = st.columns(4)
-    start_date = col1.date_input("Kezdo datum", value=date.today() - timedelta(days=30))
-    end_date = col2.date_input("Veg datum", value=date.today())
-    query = col3.text_input("Receptnev keresese")
-    view_mode = col4.selectbox("Nezet", ["idovonal", "lista"])
+    start_date = col1.date_input("Kezdő dátum", value=date.today() - timedelta(days=30))
+    end_date = col2.date_input("Vég dátum", value=date.today())
+    query = col3.text_input("Receptnév keresése")
+    view_mode = col4.selectbox("Nézet", ["Idővonal", "Lista"])
 
     entries = list_history(start_date=start_date, end_date=end_date, query=query)
     if not entries:
@@ -30,7 +30,7 @@ def render_history_page():
     col_a.metric("Bejegyzesek", len(entries))
     col_b.metric("Kulonbozo receptek", unique_recipes)
 
-    if view_mode == "idovonal":
+    if view_mode == "Idővonal":
         grouped = _group_by_day(entries)
         for cooked_day, items in grouped.items():
             with st.container(border=True):

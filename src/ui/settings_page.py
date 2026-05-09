@@ -5,7 +5,7 @@ from src.db import get_active_backend_name
 
 
 def render_settings_page():
-    st.subheader("Beallitasok")
-    st.write("Ez az MVP verzio egyszeru, kozos csaladi accounttal mukodik.")
-    st.code(f"Aktiv backend: {get_active_backend_name()}")
-    st.code(f"Aktiv adatbazis: {get_database_path()}")
+    st.subheader("Beállítások")
+    st.write("Ez az MVP verzió egyszerű, közös családi accounttal működik.")
+    st.code(f"Aktív backend: {get_active_backend_name()}")
+    st.code(f"Aktív adatbázis: {get_database_path()}")
