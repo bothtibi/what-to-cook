@@ -18,7 +18,7 @@ def _tag_chips(tags_text):
         return
     tags = [tag.strip() for tag in tags_text.split(",") if tag.strip()]
     chips = " ".join(
-        [f"<span style='background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:999px;font-size:12px'>{tag}</span>" for tag in tags]
+        [f"<span style='background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:6px;font-size:12px'>{tag}</span>" for tag in tags]
     )
     st.markdown(chips, unsafe_allow_html=True)
 

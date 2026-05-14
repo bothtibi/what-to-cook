@@ -12,7 +12,7 @@ def _tag_chips(tags_text):
         return
     tags = [tag.strip() for tag in tags_text.split(",") if tag.strip()]
     chips = " ".join(
-        [f"<span style='background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:999px;font-size:12px'>{tag}</span>" for tag in tags]
+        [f"<span style='background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:6px;font-size:12px'>{tag}</span>" for tag in tags]
     )
     st.markdown(chips, unsafe_allow_html=True)
 
@@ -80,13 +80,13 @@ def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_gro
 
 def render_recommendation_page():
     st.subheader("Mit főzzünk?")
-    mode_col, col1, col2 = st.columns([2, 2, 1])
+    mode_col, col1, col2 = st.columns([2.2, 2, 1.2])
     mode = mode_col.selectbox(
         "Mód",
         ["Csak recept", "Csak leves", "Csak főétel", "Leves + főétel"],
     )
     category = col1.selectbox("Kategória (opcionális)", [""] + DEFAULT_CATEGORIES)
-    limit = col2.slider("Hány ajánlat legyen?", min_value=1, max_value=10, value=5)
+    limit = col2.selectbox("Ajánlatok száma", [1, 2, 3, 4, 5, 6], index=2)
 
     if mode == "Leves + főétel":
         combos = recommend_meal_combinations(limit=max(1, min(limit, 6)))

@@ -16,23 +16,72 @@ st.markdown(
     """
     <style>
     .stApp {
-        background: linear-gradient(180deg, #f8f9ff 0%, #f4f6ff 100%);
+        background: #f7f7f5;
+        color: #1f2933;
     }
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f172a 0%, #1f2937 100%);
+        background: #ffffff;
+        border-right: 1px solid #e5e7eb;
     }
     [data-testid="stSidebar"] * {
-        color: #e5e7eb;
+        color: #1f2933;
     }
     .block-container {
-        padding-top: 1.2rem;
+        max-width: 1120px;
+        padding-top: 1.4rem;
+        padding-bottom: 3rem;
+    }
+    h1 {
+        font-size: 2rem;
+        font-weight: 650;
+        letter-spacing: 0;
+        color: #111827;
+    }
+    h2, h3 {
+        color: #111827;
+        letter-spacing: 0;
+    }
+    [data-testid="stHeader"] {
+        background: rgba(247, 247, 245, 0.92);
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-color: #e5e7eb;
+        border-radius: 8px;
+        background: #ffffff;
     }
     div[data-testid="stMetricValue"] {
-        color: #4f46e5;
+        color: #1f2933;
+        font-size: 1.5rem;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #6b7280;
     }
     .stButton > button {
-        border-radius: 10px;
-        border: 1px solid #6366f1;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        background: #ffffff;
+        color: #1f2933;
+        box-shadow: none;
+    }
+    .stButton > button:hover {
+        border-color: #9ca3af;
+        color: #111827;
+    }
+    .stDownloadButton > button,
+    .stFormSubmitButton > button {
+        border-radius: 8px;
+        border: 1px solid #111827;
+        background: #111827;
+        color: #ffffff;
+    }
+    .stDownloadButton > button:hover,
+    .stFormSubmitButton > button:hover {
+        border-color: #374151;
+        background: #374151;
+        color: #ffffff;
+    }
+    [data-baseweb="tag"] {
+        border-radius: 6px;
     }
     </style>
     """,
