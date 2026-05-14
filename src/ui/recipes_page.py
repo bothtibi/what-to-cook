@@ -226,8 +226,11 @@ def render_recipes_page():
                 st.success("Recept letrehozva.")
                 st.rerun()
 
+    if "recipe_search" in st.session_state:
+        st.session_state["recipe_search_query"] = st.session_state.pop("recipe_search")
+
     col1, col2, col3 = st.columns(3)
-    query = col1.text_input("Kereses nev szerint")
+    query = col1.text_input("Kereses nev szerint", key="recipe_search_query")
     filter_category = col2.selectbox("Kategoria szuro", [""] + DEFAULT_CATEGORIES)
     filter_tag = col3.text_input("Tag szuro")
     include_disliked = st.checkbox("Amit mindketten nem szeretnek is mutassa", value=True)

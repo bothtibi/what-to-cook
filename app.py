@@ -35,40 +35,24 @@ st.markdown(
         line-height: 1.2;
         margin-bottom: 1rem;
     }
-    [data-testid="stSidebar"] .stRadio label {
-        color: #e5e7eb;
-    }
-    [data-testid="stSidebar"] [role="radiogroup"] label {
-        border-radius: 10px;
-        padding: 0.48rem 0.65rem;
-        margin-bottom: 0.25rem;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid transparent;
-        transition: background 120ms ease, border 120ms ease;
-    }
-    [data-testid="stSidebar"] [role="radiogroup"] label:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.12);
-    }
-    [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
-        background: linear-gradient(180deg, #8b6df0 0%, #6d4bdc 100%);
-        border-color: rgba(255, 255, 255, 0.24);
-        box-shadow: 0 8px 18px rgba(91, 53, 213, 0.35);
-    }
-    [data-testid="stSidebar"] [role="radiogroup"] label p {
-        font-weight: 650;
-        font-size: 0.92rem;
-    }
     [data-testid="stSidebar"] .stButton > button {
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.18);
         color: #ffffff;
         width: 100%;
-        margin-top: 1rem;
+        margin-top: 0.25rem;
+        justify-content: flex-start;
+        font-weight: 700;
     }
     [data-testid="stSidebar"] .stButton > button:hover {
         background: rgba(255, 255, 255, 0.16);
         border-color: rgba(255, 255, 255, 0.32);
+        color: #ffffff;
+    }
+    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
+        background: linear-gradient(180deg, #8b6df0 0%, #6d4bdc 100%);
+        border-color: rgba(255, 255, 255, 0.24);
+        box-shadow: 0 8px 18px rgba(91, 53, 213, 0.35);
         color: #ffffff;
     }
     .block-container {
@@ -290,6 +274,57 @@ st.markdown(
         margin-bottom: 0.55rem;
         box-shadow: 0 6px 18px rgba(16, 24, 40, 0.035);
     }
+    .history-day-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.15rem 0 0.7rem 0;
+        border-bottom: 1px solid #eef0f4;
+        margin-bottom: 0.65rem;
+    }
+    .history-day {
+        font-weight: 800;
+        color: #101828;
+        font-size: 1rem;
+    }
+    .history-day-sub {
+        color: #667085;
+        font-size: 0.8rem;
+        margin-top: 0.12rem;
+    }
+    .history-entry {
+        border: 1px solid #e7e9f0;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 0.7rem 0.8rem;
+        margin: 0.5rem 0;
+    }
+    .history-combo {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+        border-color: #ddd6fe;
+    }
+    .history-title {
+        color: #101828;
+        font-weight: 750;
+        margin-bottom: 0.35rem;
+    }
+    .history-meta {
+        color: #667085;
+        font-size: 0.82rem;
+        line-height: 1.6;
+    }
+    .combo-pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.12rem 0.48rem;
+        margin-right: 0.35rem;
+        background: #f4f3ff;
+        color: #5925dc;
+        border: 1px solid #d9d6fe;
+        font-size: 0.72rem;
+        font-weight: 800;
+        vertical-align: 1px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -301,15 +336,20 @@ if not is_authenticated():
 
 with st.sidebar:
     st.title("Mit főzzünk?")
-    page = st.radio(
-        "Oldalak",
-        options=["Javaslatok", "Receptek", "Előzmények", "Rendszer"],
-        label_visibility="collapsed",
-    )
+    if "active_page" not in st.session_state:
+        st.session_state["active_page"] = "Javaslatok"
+
+    for nav_page in ["Javaslatok", "Receptek", "Előzmények", "Rendszer"]:
+        active = st.session_state["active_page"] == nav_page
+        if st.button(nav_page, key=f"nav_{nav_page}", type="primary" if active else "secondary"):
+            st.session_state["active_page"] = nav_page
+            st.rerun()
+
     if st.button("Kijelentkezés"):
         logout()
         st.rerun()
 
+page = st.session_state["active_page"]
 st.title("Családi főzés és receptkövető")
 
 if page == "Javaslatok":

@@ -6,6 +6,7 @@ import streamlit as st
 
 from src.config import DEFAULT_CATEGORIES
 from src.history import add_history_entries, add_history_entry, recent_cooked_dates_by_recipe
+from src.recipes import get_recipe
 from src.recommendations import recommend_meal_combinations, recommend_recipes
 
 
@@ -141,6 +142,55 @@ def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_gro
         st.rerun()
 
 
+def _open_recipe_preview(recipe_id):
+    st.session_state["recipe_preview_id"] = recipe_id
+
+
+def _render_preview_content(recipe):
+    st.caption(f"{recipe['category']} · {int(recipe['prep_time_minutes'])} perc · {recipe['difficulty']}")
+    _tag_chips(recipe["tags"])
+
+    ingredients_tab, instructions_tab, notes_tab = st.tabs(["Hozzávalók", "Elkészítés", "Megjegyzés"])
+    with ingredients_tab:
+        st.write(recipe["ingredients_text"] or "-")
+    with instructions_tab:
+        st.write(recipe["instructions_text"] or "-")
+    with notes_tab:
+        st.write(recipe["notes_text"] or "-")
+
+    col1, col2 = st.columns(2)
+    if col1.button("Megnyitás a receptek között", use_container_width=True):
+        st.session_state["active_page"] = "Receptek"
+        st.session_state["recipe_search"] = recipe["name"]
+        st.session_state.pop("recipe_preview_id", None)
+        st.rerun()
+    if col2.button("Bezárás", use_container_width=True):
+        st.session_state.pop("recipe_preview_id", None)
+        st.rerun()
+
+
+def _render_recipe_preview():
+    recipe_id = st.session_state.get("recipe_preview_id")
+    if not recipe_id:
+        return
+
+    recipe = get_recipe(recipe_id)
+    if not recipe:
+        st.session_state.pop("recipe_preview_id", None)
+        return
+
+    if hasattr(st, "dialog"):
+        @st.dialog(recipe["name"])
+        def _dialog():
+            _render_preview_content(recipe)
+
+        _dialog()
+    else:
+        with st.container(border=True):
+            st.markdown(f"### {recipe['name']}")
+            _render_preview_content(recipe)
+
+
 def _render_combo_card(combo, idx, recent_data):
     soup_recipe = combo["soup"]["recipe"]
     main_recipe = combo["main"]["recipe"]
@@ -157,6 +207,11 @@ def _render_combo_card(combo, idx, recent_data):
         ).strip(),
         unsafe_allow_html=True,
     )
+    detail_cols = st.columns(2)
+    if detail_cols[0].button("Leves részletei", key=f"preview_soup_{idx}", use_container_width=True):
+        _open_recipe_preview(soup_recipe["id"])
+    if detail_cols[1].button("Főétel részletei", key=f"preview_main_{idx}", use_container_width=True):
+        _open_recipe_preview(main_recipe["id"])
     meal_group_id = f"combo-{date.today().isoformat()}-{idx}"
     _save_combo_history_form(soup_recipe, main_recipe, f"combo_{idx}", meal_group_id=meal_group_id)
 
@@ -174,6 +229,8 @@ def _render_single_card(item, idx, recent_data):
         ).strip(),
         unsafe_allow_html=True,
     )
+    if st.button("Részletek", key=f"preview_single_{idx}_{recipe['id']}", use_container_width=True):
+        _open_recipe_preview(recipe["id"])
     _save_history_form(recipe, f"single_{idx}")
 
 
@@ -214,6 +271,7 @@ def render_recommendation_page():
             for offset, combo in enumerate(combos[start : start + 3], start=0):
                 with cols[offset]:
                     _render_combo_card(combo, start + offset + 1, recent_data)
+        _render_recipe_preview()
         return
 
     if mode == "Csak leves":
@@ -233,3 +291,4 @@ def render_recommendation_page():
         for offset, item in enumerate(recipes[start : start + 3], start=0):
             with cols[offset]:
                 _render_single_card(item, start + offset + 1, recent_data)
+    _render_recipe_preview()
