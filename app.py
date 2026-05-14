@@ -23,12 +23,18 @@ st.markdown(
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #121c2b 0%, #172435 100%);
         border-right: 1px solid #0f172a;
+        min-width: 13.5rem;
+        max-width: 13.5rem;
     }
     [data-testid="stSidebar"] * {
         color: #f8fafc;
     }
     [data-testid="stSidebar"] > div {
         padding-top: 1rem;
+        width: 13.5rem;
+    }
+    [data-testid="collapsedControl"] {
+        display: none;
     }
     [data-testid="stSidebar"] h1 {
         color: #ffffff;
@@ -351,6 +357,7 @@ with st.sidebar:
         active = st.session_state["active_page"] == page_key
         if st.button(label, key=f"nav_{page_key}", type="primary" if active else "secondary"):
             st.session_state["active_page"] = page_key
+            st.session_state.pop("recipe_preview_id", None)
             st.rerun()
 
     if st.button(t("nav.logout")):

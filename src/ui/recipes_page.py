@@ -162,12 +162,6 @@ def _recipe_form(defaults, form_key, submit_label):
             height=140,
             key=f"{form_key}_instructions",
         )
-        notes_text = st.text_area(
-            t("common.notes"),
-            value=defaults.get("notes_text", ""),
-            height=80,
-            key=f"{form_key}_notes",
-        )
 
         st.markdown(f"##### {t('recipes.form.preferences')}")
         pref_left, pref_right = st.columns(2)
@@ -198,7 +192,7 @@ def _recipe_form(defaults, form_key, submit_label):
         "difficulty": difficulty.strip(),
         "ingredients_text": ingredients_text.strip(),
         "instructions_text": instructions_text.strip(),
-        "notes_text": notes_text.strip(),
+        "notes_text": defaults.get("notes_text", "").strip(),
         **_preference_flags(tibi_preference, melinda_preference),
     }
     return submitted, data
@@ -275,9 +269,6 @@ def render_recipes_page():
                     left.write(recipe["ingredients_text"] or "-")
                     right.markdown(f"##### {t('common.instructions')}")
                     right.write(recipe["instructions_text"] or "-")
-                    if recipe["notes_text"]:
-                        st.markdown(f"##### {t('common.notes')}")
-                        st.write(recipe["notes_text"])
 
                 with edit_tab:
                     save, data = _recipe_form(recipe, f"edit_recipe_{recipe['id']}", t("recipes.save_changes"))

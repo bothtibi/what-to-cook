@@ -143,41 +143,28 @@ def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_gro
         st.rerun()
 
 
-def _open_recipe_preview(recipe_id):
-    st.session_state["recipe_preview_id"] = recipe_id
-
-
 def _render_preview_content(recipe):
     st.caption(f"{category_label(recipe['category'])} · {int(recipe['prep_time_minutes'])} perc · {difficulty_label(recipe['difficulty'])}")
     _tag_chips(recipe["tags"])
 
-    ingredients_tab, instructions_tab, notes_tab = st.tabs([t("common.ingredients"), t("common.instructions"), t("common.notes")])
+    ingredients_tab, instructions_tab = st.tabs([t("common.ingredients"), t("common.instructions")])
     with ingredients_tab:
         st.write(recipe["ingredients_text"] or "-")
     with instructions_tab:
         st.write(recipe["instructions_text"] or "-")
-    with notes_tab:
-        st.write(recipe["notes_text"] or "-")
 
-    col1, col2 = st.columns(2)
-    if col1.button(t("recommendations.open_in_recipes"), use_container_width=True):
+    if st.button(t("recommendations.open_in_recipes"), use_container_width=True):
         st.session_state["active_page"] = "recipes"
         st.session_state["recipe_search"] = recipe["name"]
-        st.session_state.pop("recipe_preview_id", None)
-        st.rerun()
-    if col2.button(t("common.close"), use_container_width=True):
-        st.session_state.pop("recipe_preview_id", None)
         st.rerun()
 
 
-def _render_recipe_preview():
-    recipe_id = st.session_state.get("recipe_preview_id")
+def _render_recipe_preview(recipe_id):
     if not recipe_id:
         return
 
     recipe = get_recipe(recipe_id)
     if not recipe:
-        st.session_state.pop("recipe_preview_id", None)
         return
 
     if hasattr(st, "dialog"):
@@ -195,6 +182,7 @@ def _render_recipe_preview():
 def _render_combo_card(combo, idx, recent_data):
     soup_recipe = combo["soup"]["recipe"]
     main_recipe = combo["main"]["recipe"]
+    preview_id = None
     st.markdown(
         dedent(
             f"""
@@ -210,15 +198,17 @@ def _render_combo_card(combo, idx, recent_data):
     )
     detail_cols = st.columns(2)
     if detail_cols[0].button(t("recommendations.soup_details"), key=f"preview_soup_{idx}", use_container_width=True):
-        _open_recipe_preview(soup_recipe["id"])
+        preview_id = soup_recipe["id"]
     if detail_cols[1].button(t("recommendations.main_details"), key=f"preview_main_{idx}", use_container_width=True):
-        _open_recipe_preview(main_recipe["id"])
+        preview_id = main_recipe["id"]
     meal_group_id = f"combo-{date.today().isoformat()}-{idx}"
     _save_combo_history_form(soup_recipe, main_recipe, f"combo_{idx}", meal_group_id=meal_group_id)
+    return preview_id
 
 
 def _render_single_card(item, idx, recent_data):
     recipe = item["recipe"]
+    preview_id = None
     st.markdown(
         dedent(
             f"""
@@ -231,8 +221,9 @@ def _render_single_card(item, idx, recent_data):
         unsafe_allow_html=True,
     )
     if st.button(t("common.details"), key=f"preview_single_{idx}_{recipe['id']}", use_container_width=True):
-        _open_recipe_preview(recipe["id"])
+        preview_id = recipe["id"]
     _save_history_form(recipe, f"single_{idx}")
+    return preview_id
 
 
 def render_recommendation_page():
@@ -279,12 +270,14 @@ def render_recommendation_page():
             st.info(t("recommendations.no_combo"))
             return
 
+        preview_id = None
         for start in range(0, len(combos), 3):
             cols = st.columns(3)
             for offset, combo in enumerate(combos[start : start + 3], start=0):
                 with cols[offset]:
-                    _render_combo_card(combo, start + offset + 1, recent_data)
-        _render_recipe_preview()
+                    clicked_preview_id = _render_combo_card(combo, start + offset + 1, recent_data)
+                    preview_id = clicked_preview_id or preview_id
+        _render_recipe_preview(preview_id)
         return
 
     if mode == "soup":
@@ -299,9 +292,11 @@ def render_recommendation_page():
         st.info(t("recommendations.no_recipes"))
         return
 
+    preview_id = None
     for start in range(0, len(recipes), 3):
         cols = st.columns(3)
         for offset, item in enumerate(recipes[start : start + 3], start=0):
             with cols[offset]:
-                _render_single_card(item, start + offset + 1, recent_data)
-    _render_recipe_preview()
+                clicked_preview_id = _render_single_card(item, start + offset + 1, recent_data)
+                preview_id = clicked_preview_id or preview_id
+    _render_recipe_preview(preview_id)
