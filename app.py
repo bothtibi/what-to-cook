@@ -26,12 +26,50 @@ st.markdown(
     [data-testid="stSidebar"] * {
         color: #f8fafc;
     }
+    [data-testid="stSidebar"] > div {
+        padding-top: 1rem;
+    }
+    [data-testid="stSidebar"] h1 {
+        color: #ffffff;
+        font-size: 1.15rem;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+    }
     [data-testid="stSidebar"] .stRadio label {
         color: #e5e7eb;
     }
     [data-testid="stSidebar"] [role="radiogroup"] label {
-        border-radius: 8px;
-        padding: 0.35rem 0.45rem;
+        border-radius: 10px;
+        padding: 0.48rem 0.65rem;
+        margin-bottom: 0.25rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid transparent;
+        transition: background 120ms ease, border 120ms ease;
+    }
+    [data-testid="stSidebar"] [role="radiogroup"] label:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+    [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+        background: linear-gradient(180deg, #8b6df0 0%, #6d4bdc 100%);
+        border-color: rgba(255, 255, 255, 0.24);
+        box-shadow: 0 8px 18px rgba(91, 53, 213, 0.35);
+    }
+    [data-testid="stSidebar"] [role="radiogroup"] label p {
+        font-weight: 650;
+        font-size: 0.92rem;
+    }
+    [data-testid="stSidebar"] .stButton > button {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #ffffff;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.32);
+        color: #ffffff;
     }
     .block-container {
         max-width: 1180px;
@@ -105,10 +143,6 @@ st.markdown(
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 0.35rem 0.65rem;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] label {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: transparent;
     }
     [data-baseweb="tag"] {
         border-radius: 6px;
@@ -228,10 +262,10 @@ with st.sidebar:
     st.title("Mit főzzünk?")
     page = st.radio(
         "Oldalak",
-        options=["Javaslatok", "Receptek", "Előzmények", "Backup", "Beállítások"],
+        options=["Javaslatok", "Receptek", "Előzmények", "Rendszer"],
         label_visibility="collapsed",
     )
-    if st.button("Kijelentkezes"):
+    if st.button("Kijelentkezés"):
         logout()
         st.rerun()
 
@@ -243,7 +277,9 @@ elif page == "Receptek":
     render_recipes_page()
 elif page == "Előzmények":
     render_history_page()
-elif page == "Backup":
-    render_backup_page()
 else:
-    render_settings_page()
+    backup_tab, settings_tab = st.tabs(["Backup", "Beállítások"])
+    with backup_tab:
+        render_backup_page()
+    with settings_tab:
+        render_settings_page()
