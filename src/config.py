@@ -3,7 +3,7 @@ import os
 import streamlit as st
 
 
-DEFAULT_CATEGORIES = ["leves", "foetel", "reggeli", "vacsora"]
+DEFAULT_CATEGORIES = ["Leves", "Főétel", "Reggeli", "Vacsora"]
 RECIPE_DIFFICULTIES = ["Könnyű", "Közepes", "Nehéz"]
 
 

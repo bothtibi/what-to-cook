@@ -1,4 +1,4 @@
-from src.db import execute, fetchall
+from src.db import execute, execute_transaction, fetchall
 
 
 def add_history_entry(recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes):
@@ -9,6 +9,29 @@ def add_history_entry(recipe_id, cooked_date, days_planned, quantity_note, meal_
         VALUES (?, ?, ?, ?, ?, ?)
         """,
         (recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes),
+    )
+
+
+def add_history_entries(entries):
+    execute_transaction(
+        [
+            (
+                """
+                INSERT INTO history
+                (recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    entry["recipe_id"],
+                    entry["cooked_date"],
+                    entry["days_planned"],
+                    entry["quantity_note"],
+                    entry["meal_group_id"],
+                    entry["notes"],
+                ),
+            )
+            for entry in entries
+        ]
     )
 
 

@@ -3,7 +3,7 @@ from datetime import date
 import streamlit as st
 
 from src.config import DEFAULT_CATEGORIES
-from src.history import add_history_entry
+from src.history import add_history_entries, add_history_entry
 from src.recommendations import recommend_meal_combinations, recommend_recipes
 
 
@@ -45,6 +45,39 @@ def _save_history_form(recipe, form_key_prefix, meal_group_id=""):
         st.rerun()
 
 
+def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_group_id):
+    with st.form(form_key_prefix):
+        st.caption("Ezt a kombinaciot megfoztuk")
+        cooked_date = st.date_input("Mikor?", value=date.today(), key=f"date_{form_key_prefix}")
+        days_planned = st.number_input(
+            "Hany napra fozve?",
+            min_value=1,
+            max_value=14,
+            value=1,
+            key=f"days_{form_key_prefix}",
+        )
+        quantity_note = st.text_input("Mennyiseg roviden", key=f"qty_{form_key_prefix}")
+        notes = st.text_area("Megjegyzes", key=f"note_{form_key_prefix}")
+        submit = st.form_submit_button("Kombinacio mentese a history-ba")
+
+    if submit:
+        common = {
+            "cooked_date": str(cooked_date),
+            "days_planned": int(days_planned),
+            "quantity_note": quantity_note.strip(),
+            "meal_group_id": meal_group_id.strip(),
+            "notes": notes.strip(),
+        }
+        add_history_entries(
+            [
+                {"recipe_id": soup_recipe["id"], **common},
+                {"recipe_id": main_recipe["id"], **common},
+            ]
+        )
+        st.success("Kombinacio history bejegyzes mentve.")
+        st.rerun()
+
+
 def render_recommendation_page():
     st.subheader("Mit főzzünk?")
     mode_col, col1, col2 = st.columns([2, 2, 1])
@@ -79,11 +112,7 @@ def render_recommendation_page():
                     _tag_chips(main_recipe["tags"])
 
                 st.caption("Ajánlás oka: " + " | ".join(combo["reasons"]))
-                c1, c2 = st.columns(2)
-                with c1:
-                    _save_history_form(soup_recipe, f"combo_soup_{idx}", meal_group_id=meal_group_id)
-                with c2:
-                    _save_history_form(main_recipe, f"combo_main_{idx}", meal_group_id=meal_group_id)
+                _save_combo_history_form(soup_recipe, main_recipe, f"combo_{idx}", meal_group_id=meal_group_id)
         return
 
     if mode == "Csak leves":

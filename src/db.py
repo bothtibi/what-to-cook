@@ -38,12 +38,9 @@ def execute(sql, params=()):
     if _use_turso():
         url = get_turso_database_url()
         token = get_turso_auth_token()
-        try:
-            with libsql_client.create_client_sync(url=url, auth_token=token) as client:
-                client.execute(sql, list(params))
-            return
-        except Exception:
-            pass
+        with libsql_client.create_client_sync(url=url, auth_token=token) as client:
+            client.execute(sql, list(params))
+        return
 
     conn = _sqlite_connection()
     with conn:
@@ -55,13 +52,10 @@ def fetchall(sql, params=()):
     if _use_turso():
         url = get_turso_database_url()
         token = get_turso_auth_token()
-        try:
-            with libsql_client.create_client_sync(url=url, auth_token=token) as client:
-                result = client.execute(sql, list(params))
-                columns = list(getattr(result, "columns", []))
-                return [_row_to_dict(row, columns) for row in result.rows]
-        except Exception:
-            pass
+        with libsql_client.create_client_sync(url=url, auth_token=token) as client:
+            result = client.execute(sql, list(params))
+            columns = list(getattr(result, "columns", []))
+            return [_row_to_dict(row, columns) for row in result.rows]
 
     conn = _sqlite_connection()
     rows = conn.execute(sql, params).fetchall()
@@ -75,8 +69,34 @@ def fetchone(sql, params=()):
 
 
 def execute_many(sql, param_sets):
-    for params in param_sets:
-        execute(sql, params)
+    execute_transaction([(sql, params) for params in param_sets])
+
+
+def execute_transaction(statements):
+    if not statements:
+        return
+
+    if _use_turso():
+        url = get_turso_database_url()
+        token = get_turso_auth_token()
+        with libsql_client.create_client_sync(url=url, auth_token=token) as client:
+            client.execute("BEGIN")
+            try:
+                for sql, params in statements:
+                    client.execute(sql, list(params))
+                client.execute("COMMIT")
+            except Exception:
+                client.execute("ROLLBACK")
+                raise
+        return
+
+    conn = _sqlite_connection()
+    try:
+        with conn:
+            for sql, params in statements:
+                conn.execute(sql, params)
+    finally:
+        conn.close()
 
 
 def get_active_backend_name():

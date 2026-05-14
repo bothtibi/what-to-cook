@@ -1,9 +1,9 @@
 import json
-from datetime import datetime
+from datetime import date, datetime
 
 import streamlit as st
 
-from src.db import execute, execute_many, fetchall, fetchone
+from src.db import execute, execute_many, execute_transaction, fetchall, fetchone
 
 
 def build_backup_payload():
@@ -47,66 +47,89 @@ def download_backup_button():
     )
 
 
+def _cooked_date_or_default(value):
+    if not value:
+        return date.today().isoformat()
+    date.fromisoformat(str(value))
+    return str(value)
+
+
+def _recipe_replace_row(item):
+    return (
+        item.get("id"),
+        item.get("name", ""),
+        item.get("category", ""),
+        item.get("tags", ""),
+        int(item.get("prep_time_minutes", 0)),
+        item.get("difficulty", ""),
+        item.get("ingredients_text", ""),
+        item.get("instructions_text", ""),
+        item.get("notes_text", ""),
+        int(item.get("is_favorite", 0)),
+        int(item.get("is_blocked", 0)),
+        int(item.get("favorite_tibi", 0)),
+        int(item.get("favorite_melinda", 0)),
+        int(item.get("dislike_tibi", 0)),
+        int(item.get("dislike_melinda", 0)),
+        item.get("created_at") or datetime.utcnow().isoformat(),
+        item.get("updated_at") or datetime.utcnow().isoformat(),
+    )
+
+
+def _history_replace_row(item, valid_recipe_ids):
+    recipe_id = item.get("recipe_id")
+    if recipe_id not in valid_recipe_ids:
+        raise ValueError(f"History references missing recipe_id: {recipe_id}")
+    return (
+        item.get("id"),
+        recipe_id,
+        _cooked_date_or_default(item.get("cooked_date")),
+        int(item.get("days_planned", 1)),
+        item.get("quantity_note", ""),
+        item.get("meal_group_id", ""),
+        item.get("notes", ""),
+    )
+
+
 def import_backup(payload, mode="merge"):
     recipes = payload.get("recipes", [])
     history = payload.get("history", [])
 
     if mode == "replace":
-        execute("DELETE FROM history")
-        execute("DELETE FROM recipes")
+        recipe_rows = [_recipe_replace_row(item) for item in recipes]
+        valid_recipe_ids = {row[0] for row in recipe_rows}
+        history_rows = [_history_replace_row(item, valid_recipe_ids) for item in history]
 
-    if mode == "replace":
-        execute_many(
-            """
-            INSERT INTO recipes
-            (id, name, category, tags, prep_time_minutes, difficulty, ingredients_text,
-             instructions_text, notes_text, is_favorite, is_blocked,
-             favorite_tibi, favorite_melinda, dislike_tibi, dislike_melinda,
-             created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    item.get("id"),
-                    item.get("name", ""),
-                    item.get("category", ""),
-                    item.get("tags", ""),
-                    int(item.get("prep_time_minutes", 0)),
-                    item.get("difficulty", ""),
-                    item.get("ingredients_text", ""),
-                    item.get("instructions_text", ""),
-                    item.get("notes_text", ""),
-                    int(item.get("is_favorite", 0)),
-                    int(item.get("is_blocked", 0)),
-                    int(item.get("favorite_tibi", 0)),
-                    int(item.get("favorite_melinda", 0)),
-                    int(item.get("dislike_tibi", 0)),
-                    int(item.get("dislike_melinda", 0)),
-                    item.get("created_at") or datetime.utcnow().isoformat(),
-                    item.get("updated_at") or datetime.utcnow().isoformat(),
-                )
-                for item in recipes
-            ],
+        statements = [
+            ("DELETE FROM history", ()),
+            ("DELETE FROM recipes", ()),
+        ]
+        statements.extend(
+            (
+                """
+                INSERT INTO recipes
+                (id, name, category, tags, prep_time_minutes, difficulty, ingredients_text,
+                 instructions_text, notes_text, is_favorite, is_blocked,
+                 favorite_tibi, favorite_melinda, dislike_tibi, dislike_melinda,
+                 created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                row,
+            )
+            for row in recipe_rows
         )
-        execute_many(
-            """
-            INSERT INTO history
-            (id, recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    item.get("id"),
-                    item.get("recipe_id"),
-                    item.get("cooked_date"),
-                    int(item.get("days_planned", 1)),
-                    item.get("quantity_note", ""),
-                    item.get("meal_group_id", ""),
-                    item.get("notes", ""),
-                )
-                for item in history
-            ],
+        statements.extend(
+            (
+                """
+                INSERT INTO history
+                (id, recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                row,
+            )
+            for row in history_rows
         )
+        execute_transaction(statements)
         return
 
     old_to_new_ids = {}
@@ -160,7 +183,7 @@ def import_backup(payload, mode="merge"):
         history_rows.append(
             (
                 mapped_recipe_id,
-                item.get("cooked_date") or datetime.utcnow().date().isoformat(),
+                _cooked_date_or_default(item.get("cooked_date")),
                 int(item.get("days_planned", 1)),
                 item.get("quantity_note", ""),
                 item.get("meal_group_id", ""),

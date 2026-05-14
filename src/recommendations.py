@@ -22,8 +22,14 @@ def score_recipe(recipe, recent_data):
         score -= 2.5
         reasons.append("valaki nem szereti")
 
+    last_date = None
     if data:
-        last_date = date.fromisoformat(data["last_cooked_date"])
+        try:
+            last_date = date.fromisoformat(data["last_cooked_date"])
+        except (TypeError, ValueError):
+            reasons.append("ervenytelen history datum kihagyva")
+
+    if data and last_date:
         days_since = (date.today() - last_date).days
         stale_boost = min(days_since / 3.0, 10.0)
         frequency_penalty = min(data["cooked_count"] * 0.7, 5.0)
@@ -33,7 +39,7 @@ def score_recipe(recipe, recent_data):
             reasons.append(f"regen fozve ({days_since} napja)")
         if data["cooked_count"] >= 3:
             reasons.append("gyakran keszult, kicsit visszafogva")
-    else:
+    elif not data:
         score += 4.0
         reasons.append("meg nem volt historyban")
 
