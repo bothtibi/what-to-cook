@@ -1,18 +1,58 @@
 from src.db import execute, execute_transaction, fetchall
 
 
+def _clean_history_value(value):
+    return "" if value is None else str(value).strip()
+
+
+def _clean_days(value):
+    try:
+        return max(int(value), 1)
+    except (TypeError, ValueError):
+        return 1
+
+
+def clean_history_entry(entry):
+    return {
+        "recipe_id": int(entry["recipe_id"]),
+        "cooked_date": _clean_history_value(entry["cooked_date"]),
+        "days_planned": _clean_days(entry.get("days_planned", 1)),
+        "quantity_note": _clean_history_value(entry.get("quantity_note", "")),
+        "meal_group_id": _clean_history_value(entry.get("meal_group_id", "")),
+        "notes": _clean_history_value(entry.get("notes", "")),
+    }
+
+
 def add_history_entry(recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes):
+    entry = clean_history_entry(
+        {
+            "recipe_id": recipe_id,
+            "cooked_date": cooked_date,
+            "days_planned": days_planned,
+            "quantity_note": quantity_note,
+            "meal_group_id": meal_group_id,
+            "notes": notes,
+        }
+    )
     execute(
         """
         INSERT INTO history
         (recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes)
         VALUES (?, ?, ?, ?, ?, ?)
         """,
-        (recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes),
+        (
+            entry["recipe_id"],
+            entry["cooked_date"],
+            entry["days_planned"],
+            entry["quantity_note"],
+            entry["meal_group_id"],
+            entry["notes"],
+        ),
     )
 
 
 def add_history_entries(entries):
+    cleaned_entries = [clean_history_entry(entry) for entry in entries]
     execute_transaction(
         [
             (
@@ -30,9 +70,35 @@ def add_history_entries(entries):
                     entry["notes"],
                 ),
             )
-            for entry in entries
+            for entry in cleaned_entries
         ]
     )
+
+
+def update_history_entry(history_id, cooked_date, days_planned, quantity_note, notes):
+    execute(
+        """
+        UPDATE history
+        SET cooked_date = ?, days_planned = ?, quantity_note = ?, notes = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (
+            _clean_history_value(cooked_date),
+            _clean_days(days_planned),
+            _clean_history_value(quantity_note),
+            _clean_history_value(notes),
+            history_id,
+        ),
+    )
+
+
+def delete_history_entry(history_id):
+    execute("DELETE FROM history WHERE id = ?", (history_id,))
+
+
+def delete_history_group(meal_group_id):
+    execute("DELETE FROM history WHERE meal_group_id = ?", (_clean_history_value(meal_group_id),))
 
 
 def list_history(start_date=None, end_date=None, query=""):

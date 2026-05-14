@@ -118,6 +118,7 @@ def init_db():
             notes_text TEXT NOT NULL DEFAULT '',
             is_favorite INTEGER NOT NULL DEFAULT 0,
             is_blocked INTEGER NOT NULL DEFAULT 0,
+            is_archived INTEGER NOT NULL DEFAULT 0,
             favorite_tibi INTEGER NOT NULL DEFAULT 0,
             favorite_melinda INTEGER NOT NULL DEFAULT 0,
             dislike_tibi INTEGER NOT NULL DEFAULT 0,
@@ -137,6 +138,8 @@ def init_db():
             quantity_note TEXT NOT NULL DEFAULT '',
             meal_group_id TEXT NOT NULL DEFAULT '',
             notes TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(recipe_id) REFERENCES recipes(id)
         )
         """
@@ -150,6 +153,15 @@ def init_db():
         execute("ALTER TABLE recipes ADD COLUMN dislike_tibi INTEGER NOT NULL DEFAULT 0")
     if "dislike_melinda" not in recipe_columns:
         execute("ALTER TABLE recipes ADD COLUMN dislike_melinda INTEGER NOT NULL DEFAULT 0")
+    if "is_archived" not in recipe_columns:
+        execute("ALTER TABLE recipes ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0")
+    history_columns = {col["name"] for col in fetchall("PRAGMA table_info(history)")}
+    if "created_at" not in history_columns:
+        execute("ALTER TABLE history ADD COLUMN created_at TEXT NOT NULL DEFAULT ''")
+        execute("UPDATE history SET created_at = CURRENT_TIMESTAMP WHERE created_at = ''")
+    if "updated_at" not in history_columns:
+        execute("ALTER TABLE history ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''")
+        execute("UPDATE history SET updated_at = CURRENT_TIMESTAMP WHERE updated_at = ''")
     execute(
         """
         UPDATE recipes

@@ -5,8 +5,21 @@ from src.history import recent_cooked_dates_by_recipe
 from src.recipes import list_recipes
 
 
+TAG_BOOSTS = {
+    "gyors": 1.1,
+    "kedvenc": 1.0,
+    "klasszikus": 0.7,
+    "sütőben": 0.4,
+    "kiadós": 0.4,
+}
+
+
+def _recipe_tags(recipe):
+    return {tag.strip().lower() for tag in str(recipe.get("tags", "")).split(",") if tag.strip()}
+
+
 def score_recipe(recipe, recent_data):
-    if recipe["dislike_tibi"] and recipe["dislike_melinda"]:
+    if recipe.get("is_archived") or recipe["dislike_tibi"] and recipe["dislike_melinda"]:
         return None
 
     score = 10.0
@@ -15,12 +28,25 @@ def score_recipe(recipe, recent_data):
 
     favorite_points = int(bool(recipe["favorite_tibi"])) + int(bool(recipe["favorite_melinda"]))
     if favorite_points:
-        score += favorite_points * 1.5
-        reasons.append("kedvenc jeloles")
+        score += favorite_points * 2.0
+        reasons.append("kedvenc")
 
     if recipe["dislike_tibi"] or recipe["dislike_melinda"]:
-        score -= 2.5
+        score -= 4.0
         reasons.append("valaki nem szereti")
+
+    tags = _recipe_tags(recipe)
+    tag_score = sum(TAG_BOOSTS.get(tag, 0) for tag in tags)
+    if tag_score:
+        score += tag_score
+        reasons.append("tagek alapjan jo valasztas")
+
+    prep_time = int(recipe.get("prep_time_minutes", 0) or 0)
+    if prep_time and prep_time <= 30:
+        score += 0.8
+        reasons.append("gyors")
+    elif prep_time >= 90:
+        score -= 0.8
 
     last_date = None
     if data:
@@ -31,22 +57,27 @@ def score_recipe(recipe, recent_data):
 
     if data and last_date:
         days_since = (date.today() - last_date).days
-        stale_boost = min(days_since / 3.0, 10.0)
-        frequency_penalty = min(data["cooked_count"] * 0.7, 5.0)
+        if days_since < 3:
+            score -= 8.0
+            reasons.append("nagyon frissen volt")
+        elif days_since < 7:
+            score -= 3.5
+            reasons.append("nemreg volt")
+
+        stale_boost = min(days_since / 4.0, 8.0)
+        frequency_penalty = min(data["cooked_count"] * 0.9, 6.0)
         score += stale_boost
         score -= frequency_penalty
-        if days_since >= 10:
+        if days_since >= 14:
             reasons.append(f"regen fozve ({days_since} napja)")
         if data["cooked_count"] >= 3:
             reasons.append("gyakran keszult, kicsit visszafogva")
     elif not data:
-        score += 4.0
-        reasons.append("meg nem volt historyban")
+        score += 3.0
+        reasons.append("uj vagy regen nem hasznalt")
 
-    random_factor = random.uniform(-0.8, 0.8)
+    random_factor = random.uniform(-0.35, 0.35)
     score += random_factor
-    if abs(random_factor) > 0.5:
-        reasons.append("kis random faktor")
     return {"score": score, "reasons": reasons}
 
 
@@ -84,7 +115,6 @@ def recommend_meal_combinations(limit=3):
                     "main": main,
                     "score": combo_score,
                     "reasons": [
-                        "egyensúly: leves + főétel",
                         *soup["reasons"][:1],
                         *main["reasons"][:1],
                     ],

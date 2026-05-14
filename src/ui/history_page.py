@@ -4,7 +4,14 @@ from datetime import date, datetime, timedelta
 
 import streamlit as st
 
-from src.history import add_history_entries, add_history_entry, list_history
+from src.history import (
+    add_history_entries,
+    add_history_entry,
+    delete_history_entry,
+    delete_history_group,
+    list_history,
+    update_history_entry,
+)
 from src.i18n import category_label, t
 from src.recipes import list_recipes
 
@@ -59,6 +66,13 @@ def _select_recipe(label, recipes, key):
     options = _recipe_lookup_options(recipes)
     selected_label = st.selectbox(label, list(options.keys()), key=key)
     return options[selected_label]
+
+
+def _parse_history_date(value):
+    try:
+        return date.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return date.today()
 
 
 def _render_manual_add():
@@ -196,6 +210,52 @@ def _render_entry_card(item):
     )
 
 
+def _render_entry_action_fields(item, suffix=""):
+    action_key = f"history_action_{item['id']}_{suffix}"
+    with st.form(f"edit_history_{item['id']}_{suffix}"):
+        cooked_date = st.date_input(
+            t("history.cooked_date"),
+            value=_parse_history_date(item["cooked_date"]),
+            key=f"history_date_{item['id']}_{suffix}",
+        )
+        days_planned = st.number_input(
+            t("history.days"),
+            min_value=1,
+            max_value=14,
+            value=int(item["days_planned"]),
+            step=1,
+            key=f"history_days_{item['id']}_{suffix}",
+        )
+        quantity_note = st.text_input(
+            t("history.quantity_note"),
+            value=item["quantity_note"],
+            key=f"history_quantity_{item['id']}_{suffix}",
+        )
+        notes = st.text_area(
+            t("history.notes"),
+            value=item["notes"],
+            height=70,
+            key=f"history_notes_{item['id']}_{suffix}",
+        )
+        saved = st.form_submit_button(t("history.save_changes"), use_container_width=True)
+
+    if saved:
+        update_history_entry(item["id"], cooked_date.isoformat(), int(days_planned), quantity_note, notes)
+        st.success(t("history.updated"))
+        st.rerun()
+
+    confirm_delete = st.checkbox(t("history.delete_confirm"), key=f"confirm_delete_{action_key}")
+    if st.button(t("history.delete_entry"), key=f"delete_{action_key}", disabled=not confirm_delete):
+        delete_history_entry(item["id"])
+        st.success(t("history.deleted"))
+        st.rerun()
+
+
+def _render_entry_actions(item, suffix=""):
+    with st.expander(t("history.manage_entry")):
+        _render_entry_action_fields(item, suffix)
+
+
 def _render_combo_card(items):
     recipe_names = " + ".join(html.escape(str(item["recipe_name"])) for item in items)
     badges = " ".join(_category_badge(item["category"]) for item in items)
@@ -217,6 +277,21 @@ def _render_combo_card(items):
         ).strip(),
         unsafe_allow_html=True,
     )
+    with st.expander(t("history.manage_combo")):
+        for item in items:
+            st.markdown(f"**{html.escape(str(item['recipe_name']))}**")
+            _render_entry_action_fields(item, suffix="combo")
+
+        if items and items[0]["meal_group_id"]:
+            confirm_delete = st.checkbox(t("history.delete_combo_confirm"), key=f"confirm_delete_combo_{items[0]['meal_group_id']}")
+            if st.button(
+                t("history.delete_combo"),
+                key=f"delete_combo_{items[0]['meal_group_id']}",
+                disabled=not confirm_delete,
+            ):
+                delete_history_group(items[0]["meal_group_id"])
+                st.success(t("history.deleted_combo"))
+                st.rerun()
 
 
 def _split_grouped_items(items):
@@ -260,6 +335,7 @@ def _render_day(day, items):
             _render_combo_card(payload)
         else:
             _render_entry_card(payload)
+            _render_entry_actions(payload, suffix="timeline")
 
 
 def _render_timeline(entries):
@@ -282,6 +358,7 @@ def _render_list(entries):
                 f"{_category_badge(item['category'])} {html.escape(_entry_details(item))}",
                 unsafe_allow_html=True,
             )
+            _render_entry_actions(item, suffix="list")
 
 
 def render_history_page():

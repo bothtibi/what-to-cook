@@ -68,6 +68,7 @@ def _recipe_replace_row(item):
         item.get("notes_text", ""),
         int(item.get("is_favorite", 0)),
         int(item.get("is_blocked", 0)),
+        int(item.get("is_archived", 0)),
         int(item.get("favorite_tibi", 0)),
         int(item.get("favorite_melinda", 0)),
         int(item.get("dislike_tibi", 0)),
@@ -89,6 +90,8 @@ def _history_replace_row(item, valid_recipe_ids):
         item.get("quantity_note", ""),
         item.get("meal_group_id", ""),
         item.get("notes", ""),
+        item.get("created_at") or datetime.utcnow().isoformat(),
+        item.get("updated_at") or datetime.utcnow().isoformat(),
     )
 
 
@@ -110,10 +113,10 @@ def import_backup(payload, mode="merge"):
                 """
                 INSERT INTO recipes
                 (id, name, category, tags, prep_time_minutes, difficulty, ingredients_text,
-                 instructions_text, notes_text, is_favorite, is_blocked,
+                 instructions_text, notes_text, is_favorite, is_blocked, is_archived,
                  favorite_tibi, favorite_melinda, dislike_tibi, dislike_melinda,
                  created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 row,
             )
@@ -123,8 +126,8 @@ def import_backup(payload, mode="merge"):
             (
                 """
                 INSERT INTO history
-                (id, recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (id, recipe_id, cooked_date, days_planned, quantity_note, meal_group_id, notes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 row,
             )
@@ -148,10 +151,10 @@ def import_backup(payload, mode="merge"):
             """
             INSERT INTO recipes
             (name, category, tags, prep_time_minutes, difficulty, ingredients_text,
-             instructions_text, notes_text, is_favorite, is_blocked,
+             instructions_text, notes_text, is_favorite, is_blocked, is_archived,
              favorite_tibi, favorite_melinda, dislike_tibi, dislike_melinda,
              created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 recipe_name,
@@ -164,6 +167,7 @@ def import_backup(payload, mode="merge"):
                 item.get("notes_text", ""),
                 int(item.get("is_favorite", 0)),
                 int(item.get("is_blocked", 0)),
+                int(item.get("is_archived", 0)),
                 int(item.get("favorite_tibi", 0)),
                 int(item.get("favorite_melinda", 0)),
                 int(item.get("dislike_tibi", 0)),

@@ -6,10 +6,14 @@ import streamlit as st
 from src.config import DEFAULT_CATEGORIES, RECIPE_DIFFICULTIES
 from src.i18n import category_label, difficulty_label, t
 from src.recipes import (
+    archive_recipe,
     create_recipe,
+    delete_recipe,
     list_recipes,
     recipe_name_exists,
+    restore_recipe,
     update_recipe,
+    validate_recipe_data,
 )
 
 
@@ -65,6 +69,14 @@ def _recipe_list_header(recipe):
         ).strip(),
         unsafe_allow_html=True,
     )
+
+
+def _validation_warning(errors):
+    if errors:
+        labels = [t(f"recipes.validation.{error}") for error in errors]
+        st.warning(t("recipes.validation.missing", fields=", ".join(labels)))
+        return True
+    return False
 
 
 PREFERENCE_KEYS = ["neutral", "favorite", "dislike"]
@@ -227,11 +239,14 @@ def render_recipes_page():
                 t("recipes.save"),
             )
 
-            if submitted and data["name"]:
-                if recipe_name_exists(data["name"]):
+            if submitted:
+                cleaned, errors = validate_recipe_data(data)
+                if _validation_warning(errors):
+                    pass
+                elif recipe_name_exists(cleaned["name"]):
                     st.warning(t("recipes.exists"))
                 else:
-                    create_recipe(data)
+                    create_recipe(cleaned)
                     st.success(t("recipes.created"))
                     st.session_state["show_create_recipe_form"] = False
                     st.rerun()
@@ -247,9 +262,17 @@ def render_recipes_page():
         format_func=lambda value: t("category.all") if value == "" else category_label(value),
     )
     filter_tag = col3.text_input(t("recipes.tag_filter"))
-    include_disliked = st.checkbox(t("recipes.show_disliked"), value=True)
+    include_disliked, include_archived = st.columns(2)
+    include_disliked_value = include_disliked.checkbox(t("recipes.show_disliked"), value=True)
+    include_archived_value = include_archived.checkbox(t("recipes.show_archived"), value=False)
 
-    recipes = list_recipes(query=query, category=filter_category, tag=filter_tag, include_disliked=include_disliked)
+    recipes = list_recipes(
+        query=query,
+        category=filter_category,
+        tag=filter_tag,
+        include_disliked=include_disliked_value,
+        include_archived=include_archived_value,
+    )
 
     if not recipes:
         st.info(t("recipes.no_results"))
@@ -257,18 +280,22 @@ def render_recipes_page():
 
     fav_count = sum(1 for recipe in recipes if recipe["favorite_tibi"] or recipe["favorite_melinda"])
     disliked_both_count = sum(1 for recipe in recipes if recipe["dislike_tibi"] and recipe["dislike_melinda"])
-    m1, m2, m3 = st.columns(3)
+    archived_count = sum(1 for recipe in recipes if recipe.get("is_archived"))
+    m1, m2, m3, m4 = st.columns(4)
     m1.metric(t("recipes.total"), len(recipes))
     m2.metric(t("recipes.favorites"), fav_count)
     m3.metric(t("recipes.disliked_both"), disliked_both_count)
+    m4.metric(t("recipes.archived"), archived_count)
 
     for recipe in recipes:
         with st.container(border=True):
             _recipe_list_header(recipe)
             _preference_badges(recipe)
+            if recipe.get("is_archived"):
+                st.caption(t("recipes.archived_badge"))
 
             with st.expander(t("recipes.details_edit")):
-                details_tab, edit_tab = st.tabs([t("common.details"), t("common.edit")])
+                details_tab, edit_tab, manage_tab = st.tabs([t("common.details"), t("common.edit"), t("recipes.manage")])
                 with details_tab:
                     left, right = st.columns(2)
                     left.markdown(f"##### {t('common.ingredients')}")
@@ -279,10 +306,35 @@ def render_recipes_page():
                 with edit_tab:
                     save, data = _recipe_form(recipe, f"edit_recipe_{recipe['id']}", t("recipes.save_changes"))
 
-                    if save and data["name"]:
-                        if recipe_name_exists(data["name"], exclude_id=recipe["id"]):
+                    if save:
+                        cleaned, errors = validate_recipe_data(data)
+                        if _validation_warning(errors):
+                            pass
+                        elif recipe_name_exists(cleaned["name"], exclude_id=recipe["id"]):
                             st.warning(t("recipes.exists"))
                         else:
-                            update_recipe(recipe["id"], data)
+                            update_recipe(recipe["id"], cleaned)
                             st.success(t("recipes.updated"))
                             st.rerun()
+
+                with manage_tab:
+                    if recipe.get("is_archived"):
+                        if st.button(t("recipes.restore"), key=f"restore_recipe_{recipe['id']}"):
+                            restore_recipe(recipe["id"])
+                            st.success(t("recipes.restored"))
+                            st.rerun()
+                    else:
+                        if st.button(t("recipes.archive"), key=f"archive_recipe_{recipe['id']}"):
+                            archive_recipe(recipe["id"])
+                            st.success(t("recipes.archived_done"))
+                            st.rerun()
+
+                    confirm_delete = st.checkbox(t("recipes.delete_confirm"), key=f"delete_confirm_{recipe['id']}")
+                    if st.button(
+                        t("recipes.delete"),
+                        key=f"delete_recipe_{recipe['id']}",
+                        disabled=not confirm_delete,
+                    ):
+                        delete_recipe(recipe["id"])
+                        st.success(t("recipes.deleted"))
+                        st.rerun()
