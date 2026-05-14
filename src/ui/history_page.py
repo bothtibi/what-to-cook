@@ -129,13 +129,15 @@ def _render_manual_add():
     if not submitted:
         return
 
+    cooked_date_value = cooked_date.isoformat()
+
     if add_type == "combo":
         meal_group_id = f"manual-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
         add_history_entries(
             [
                 {
                     "recipe_id": soup_recipe["id"],
-                    "cooked_date": cooked_date,
+                    "cooked_date": cooked_date_value,
                     "days_planned": int(soup_days),
                     "quantity_note": quantity_note.strip(),
                     "meal_group_id": meal_group_id,
@@ -143,7 +145,7 @@ def _render_manual_add():
                 },
                 {
                     "recipe_id": main_recipe["id"],
-                    "cooked_date": cooked_date,
+                    "cooked_date": cooked_date_value,
                     "days_planned": int(main_days),
                     "quantity_note": quantity_note.strip(),
                     "meal_group_id": meal_group_id,
@@ -155,7 +157,7 @@ def _render_manual_add():
     else:
         add_history_entry(
             recipe["id"],
-            cooked_date,
+            cooked_date_value,
             int(days),
             quantity_note.strip(),
             "",
