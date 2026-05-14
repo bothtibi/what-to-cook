@@ -415,10 +415,6 @@ with st.sidebar:
             st.session_state.pop("recipe_preview_id", None)
             st.rerun()
 
-    if st.button(t("nav.logout")):
-        logout()
-        st.rerun()
-
 page = st.session_state["active_page"]
 st.title(t("app.title"))
 
@@ -429,8 +425,12 @@ elif page == "recipes":
 elif page == "history":
     render_history_page()
 else:
-    backup_tab, settings_tab = st.tabs([t("tabs.backup"), t("tabs.settings")])
-    with backup_tab:
-        render_backup_page()
+    settings_tab, backup_tab = st.tabs([t("tabs.settings"), t("tabs.backup")])
     with settings_tab:
         render_settings_page()
+        st.divider()
+        if st.button(t("nav.logout"), type="primary"):
+            logout()
+            st.rerun()
+    with backup_tab:
+        render_backup_page()

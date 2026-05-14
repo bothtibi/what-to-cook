@@ -64,7 +64,20 @@ def _select_recipe(label, recipes, key):
 def _render_manual_add():
     recipes = list_recipes(include_disliked=True)
 
-    with st.expander(t("history.manual_add"), expanded=False):
+    if "show_manual_history_form" not in st.session_state:
+        st.session_state["show_manual_history_form"] = False
+
+    if st.session_state.get("manual_history_notice"):
+        st.success(st.session_state.pop("manual_history_notice"))
+
+    if st.button(t("history.manual_add"), type="primary"):
+        st.session_state["show_manual_history_form"] = not st.session_state["show_manual_history_form"]
+        st.rerun()
+
+    if not st.session_state["show_manual_history_form"]:
+        return
+
+    with st.container(border=True):
         if not recipes:
             st.info(t("history.no_recipes_to_add"))
             return
@@ -113,42 +126,44 @@ def _render_manual_add():
             notes = st.text_area(t("history.notes"), height=80)
             submitted = st.form_submit_button(t("history.save_entry"), use_container_width=True)
 
-        if not submitted:
-            return
+    if not submitted:
+        return
 
-        if add_type == "combo":
-            meal_group_id = f"manual-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
-            add_history_entries(
-                [
-                    {
-                        "recipe_id": soup_recipe["id"],
-                        "cooked_date": cooked_date,
-                        "days_planned": int(soup_days),
-                        "quantity_note": quantity_note.strip(),
-                        "meal_group_id": meal_group_id,
-                        "notes": notes.strip(),
-                    },
-                    {
-                        "recipe_id": main_recipe["id"],
-                        "cooked_date": cooked_date,
-                        "days_planned": int(main_days),
-                        "quantity_note": quantity_note.strip(),
-                        "meal_group_id": meal_group_id,
-                        "notes": notes.strip(),
-                    },
-                ]
-            )
-            st.success(t("history.saved_combo"))
-        else:
-            add_history_entry(
-                recipe["id"],
-                cooked_date,
-                int(days),
-                quantity_note.strip(),
-                "",
-                notes.strip(),
-            )
-            st.success(t("history.saved_entry"))
+    if add_type == "combo":
+        meal_group_id = f"manual-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+        add_history_entries(
+            [
+                {
+                    "recipe_id": soup_recipe["id"],
+                    "cooked_date": cooked_date,
+                    "days_planned": int(soup_days),
+                    "quantity_note": quantity_note.strip(),
+                    "meal_group_id": meal_group_id,
+                    "notes": notes.strip(),
+                },
+                {
+                    "recipe_id": main_recipe["id"],
+                    "cooked_date": cooked_date,
+                    "days_planned": int(main_days),
+                    "quantity_note": quantity_note.strip(),
+                    "meal_group_id": meal_group_id,
+                    "notes": notes.strip(),
+                },
+            ]
+        )
+        st.session_state["manual_history_notice"] = t("history.saved_combo")
+    else:
+        add_history_entry(
+            recipe["id"],
+            cooked_date,
+            int(days),
+            quantity_note.strip(),
+            "",
+            notes.strip(),
+        )
+        st.session_state["manual_history_notice"] = t("history.saved_entry")
+    st.session_state["show_manual_history_form"] = False
+    st.rerun()
 
 
 def _entry_details(item):
