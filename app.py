@@ -215,6 +215,11 @@ st.markdown(
         color: #667085;
         font-size: 0.82rem;
     }
+    .last-cooked {
+        color: #667085;
+        font-size: 0.78rem;
+        margin-top: 0.22rem;
+    }
     .difficulty-pill {
         display: inline-block;
         border-radius: 6px;
