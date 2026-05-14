@@ -179,9 +179,14 @@ st.markdown(
         border-radius: 14px;
         background: #ffffff;
         padding: 0.9rem;
-        min-height: 310px;
         box-shadow: 0 8px 26px rgba(16, 24, 40, 0.05);
         position: relative;
+    }
+    .recommend-card-single {
+        min-height: 150px;
+    }
+    .recommend-card-combo {
+        min-height: 310px;
     }
     .rank-badge {
         position: absolute;
@@ -302,6 +307,34 @@ st.markdown(
         background: #ffffff;
         margin-bottom: 0.55rem;
         box-shadow: 0 6px 18px rgba(16, 24, 40, 0.035);
+    }
+    .recipe-badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+        margin: -0.1rem 0 0.65rem 0.05rem;
+    }
+    .recipe-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.45rem;
+        border-radius: 6px;
+        padding: 0.15rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1.15;
+        white-space: nowrap;
+    }
+    .recipe-badge-favorite {
+        background: #fefce8;
+        color: #854d0e;
+        border: 1px solid #fde68a;
+    }
+    .recipe-badge-dislike {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
     }
     .history-day-header {
         display: flex;

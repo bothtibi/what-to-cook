@@ -185,7 +185,7 @@ def _render_combo_card(combo, idx, recent_data):
     st.markdown(
         dedent(
             f"""
-        <div class="recommend-card">
+        <div class="recommend-card recommend-card-combo">
             <div class="rank-badge">{idx}</div>
             {_recipe_line(soup_recipe, recent_data)}
             <div class="combo-plus">+</div>
@@ -211,7 +211,7 @@ def _render_single_card(item, idx, recent_data):
     st.markdown(
         dedent(
             f"""
-        <div class="recommend-card">
+        <div class="recommend-card recommend-card-single">
             <div class="rank-badge">{idx}</div>
             {_recipe_line(recipe, recent_data)}
         </div>

@@ -15,12 +15,9 @@ from src.recipes import (
 
 def _tag_chips(tags_text):
     if not tags_text:
-        return
+        return []
     tags = [tag.strip() for tag in tags_text.split(",") if tag.strip()]
-    chips = " ".join(
-        [f"<span style='background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:6px;font-size:12px'>{tag}</span>" for tag in tags]
-    )
-    st.markdown(chips, unsafe_allow_html=True)
+    return [f'<span class="recipe-badge recipe-badge-favorite">#{html.escape(tag)}</span>' for tag in tags]
 
 
 def _initials(name):
@@ -103,14 +100,15 @@ def _preference_badges(recipe):
     for name, is_favorite, is_disliked in people:
         if is_disliked:
             badges.append(
-                f"<span style='background:#fef2f2;color:#991b1b;padding:3px 8px;border-radius:6px;font-size:12px'>{t('preferences.badge_dislike', name=name)}</span>"
+                f'<span class="recipe-badge recipe-badge-dislike">{t("preferences.badge_dislike", name=name)}</span>'
             )
         elif is_favorite:
             badges.append(
-                f"<span style='background:#fefce8;color:#854d0e;padding:3px 8px;border-radius:6px;font-size:12px'>{t('preferences.badge_favorite', name=name)}</span>"
+                f'<span class="recipe-badge recipe-badge-favorite">{t("preferences.badge_favorite", name=name)}</span>'
             )
+    badges.extend(_tag_chips(recipe["tags"]))
     if badges:
-        st.markdown(" ".join(badges), unsafe_allow_html=True)
+        st.markdown(f'<div class="recipe-badge-row">{" ".join(badges)}</div>', unsafe_allow_html=True)
 
 
 def _recipe_form(defaults, form_key, submit_label):
@@ -268,7 +266,6 @@ def render_recipes_page():
         with st.container(border=True):
             _recipe_list_header(recipe)
             _preference_badges(recipe)
-            _tag_chips(recipe["tags"])
 
             with st.expander(t("recipes.details_edit")):
                 details_tab, edit_tab = st.tabs([t("common.details"), t("common.edit")])

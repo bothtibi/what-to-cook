@@ -1,11 +1,12 @@
 import html
 from textwrap import dedent
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import streamlit as st
 
-from src.history import list_history
+from src.history import add_history_entries, add_history_entry, list_history
 from src.i18n import category_label, t
+from src.recipes import list_recipes
 
 
 def _group_by_day(entries):
@@ -33,6 +34,121 @@ def _category_badge(category):
 
 def _combo_badge():
     return f'<span class="combo-pill">{t("history.combo")}</span>'
+
+
+def _matches_category(recipe, category_key):
+    category = str(recipe["category"]).strip().casefold()
+    if category_key == "soup":
+        return category == "leves"
+    if category_key == "main":
+        return category in {"foetel", "f\u0151\u00e9tel"}
+    return False
+
+
+def _recipe_lookup_options(recipes):
+    options = {}
+    for recipe in recipes:
+        label = f"{recipe['name']} - {category_label(recipe['category'])}"
+        if label in options:
+            label = f"{label} #{recipe['id']}"
+        options[label] = recipe
+    return options
+
+
+def _select_recipe(label, recipes, key):
+    options = _recipe_lookup_options(recipes)
+    selected_label = st.selectbox(label, list(options.keys()), key=key)
+    return options[selected_label]
+
+
+def _render_manual_add():
+    recipes = list_recipes(include_disliked=True)
+
+    with st.expander(t("history.manual_add"), expanded=False):
+        if not recipes:
+            st.info(t("history.no_recipes_to_add"))
+            return
+
+        add_type_options = {
+            t("history.add_single"): "single",
+            t("history.add_combo"): "combo",
+        }
+        selected_type = st.selectbox(t("history.add_type"), list(add_type_options.keys()))
+        add_type = add_type_options[selected_type]
+
+        with st.form("manual_history_add"):
+            cooked_date = st.date_input(t("history.cooked_date"), value=date.today())
+
+            if add_type == "combo":
+                soups = [recipe for recipe in recipes if _matches_category(recipe, "soup")] or recipes
+                mains = [recipe for recipe in recipes if _matches_category(recipe, "main")] or recipes
+                soup_recipe = _select_recipe(t("history.soup_recipe"), soups, "manual_history_soup")
+                main_recipe = _select_recipe(t("history.main_recipe"), mains, "manual_history_main")
+                soup_days_col, main_days_col = st.columns(2)
+                soup_days = soup_days_col.number_input(
+                    t("history.soup_days"),
+                    min_value=1,
+                    max_value=14,
+                    value=1,
+                    step=1,
+                )
+                main_days = main_days_col.number_input(
+                    t("history.main_days"),
+                    min_value=1,
+                    max_value=14,
+                    value=1,
+                    step=1,
+                )
+            else:
+                recipe = _select_recipe(t("history.recipe"), recipes, "manual_history_recipe")
+                days = st.number_input(
+                    t("history.days"),
+                    min_value=1,
+                    max_value=14,
+                    value=1,
+                    step=1,
+                )
+
+            quantity_note = st.text_input(t("history.quantity_note"))
+            notes = st.text_area(t("history.notes"), height=80)
+            submitted = st.form_submit_button(t("history.save_entry"), use_container_width=True)
+
+        if not submitted:
+            return
+
+        if add_type == "combo":
+            meal_group_id = f"manual-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+            add_history_entries(
+                [
+                    {
+                        "recipe_id": soup_recipe["id"],
+                        "cooked_date": cooked_date,
+                        "days_planned": int(soup_days),
+                        "quantity_note": quantity_note.strip(),
+                        "meal_group_id": meal_group_id,
+                        "notes": notes.strip(),
+                    },
+                    {
+                        "recipe_id": main_recipe["id"],
+                        "cooked_date": cooked_date,
+                        "days_planned": int(main_days),
+                        "quantity_note": quantity_note.strip(),
+                        "meal_group_id": meal_group_id,
+                        "notes": notes.strip(),
+                    },
+                ]
+            )
+            st.success(t("history.saved_combo"))
+        else:
+            add_history_entry(
+                recipe["id"],
+                cooked_date,
+                int(days),
+                quantity_note.strip(),
+                "",
+                notes.strip(),
+            )
+            st.success(t("history.saved_entry"))
 
 
 def _entry_details(item):
@@ -153,6 +269,8 @@ def _render_list(entries):
 
 def render_history_page():
     st.subheader(t("history.title"))
+    _render_manual_add()
+
     col1, col2, col3 = st.columns([1, 1, 1.4])
     start_date = col1.date_input(t("history.start_date"), value=date.today() - timedelta(days=30))
     end_date = col2.date_input(t("history.end_date"), value=date.today())
