@@ -2,6 +2,7 @@ import streamlit as st
 
 from src.auth import is_authenticated, login_form, logout
 from src.db import init_db
+from src.i18n import t
 from src.ui.backup_page import render_backup_page
 from src.ui.history_page import render_history_page
 from src.ui.recipes_page import render_recipes_page
@@ -9,7 +10,7 @@ from src.ui.recommendation_page import render_recommendation_page
 from src.ui.settings_page import render_settings_page
 
 
-st.set_page_config(page_title="Családi főzés", layout="wide")
+st.set_page_config(page_title=t("app.page_title"), layout="wide")
 init_db()
 
 st.markdown(
@@ -335,31 +336,38 @@ if not is_authenticated():
     st.stop()
 
 with st.sidebar:
-    st.title("Mit főzzünk?")
-    if "active_page" not in st.session_state:
-        st.session_state["active_page"] = "Javaslatok"
+    st.title(t("app.sidebar_title"))
+    valid_pages = {"recommendations", "recipes", "history", "system"}
+    if st.session_state.get("active_page") not in valid_pages:
+        st.session_state["active_page"] = "recommendations"
 
-    for nav_page in ["Javaslatok", "Receptek", "Előzmények", "Rendszer"]:
-        active = st.session_state["active_page"] == nav_page
-        if st.button(nav_page, key=f"nav_{nav_page}", type="primary" if active else "secondary"):
-            st.session_state["active_page"] = nav_page
+    nav_items = [
+        ("recommendations", t("nav.recommendations")),
+        ("recipes", t("nav.recipes")),
+        ("history", t("nav.history")),
+        ("system", t("nav.system")),
+    ]
+    for page_key, label in nav_items:
+        active = st.session_state["active_page"] == page_key
+        if st.button(label, key=f"nav_{page_key}", type="primary" if active else "secondary"):
+            st.session_state["active_page"] = page_key
             st.rerun()
 
-    if st.button("Kijelentkezés"):
+    if st.button(t("nav.logout")):
         logout()
         st.rerun()
 
 page = st.session_state["active_page"]
-st.title("Családi főzés és receptkövető")
+st.title(t("app.title"))
 
-if page == "Javaslatok":
+if page == "recommendations":
     render_recommendation_page()
-elif page == "Receptek":
+elif page == "recipes":
     render_recipes_page()
-elif page == "Előzmények":
+elif page == "history":
     render_history_page()
 else:
-    backup_tab, settings_tab = st.tabs(["Backup", "Beállítások"])
+    backup_tab, settings_tab = st.tabs([t("tabs.backup"), t("tabs.settings")])
     with backup_tab:
         render_backup_page()
     with settings_tab:

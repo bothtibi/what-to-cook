@@ -1,6 +1,7 @@
 import streamlit as st
 
 from src.config import get_auth_config
+from src.i18n import t
 
 
 def is_authenticated():
@@ -8,22 +9,22 @@ def is_authenticated():
 
 
 def login_form():
-    st.title("Belepes")
-    st.write("Csaladi kozos account")
+    st.title(t("auth.title"))
+    st.write(t("auth.subtitle"))
 
     with st.form("login_form"):
-        username = st.text_input("Felhasznalonev")
-        password = st.text_input("Jelszo", type="password")
-        submitted = st.form_submit_button("Belepes")
+        username = st.text_input(t("auth.username"))
+        password = st.text_input(t("auth.password"), type="password")
+        submitted = st.form_submit_button(t("auth.submit"))
 
     if submitted:
         auth = get_auth_config()
         if username == auth["username"] and password == auth["password"]:
             st.session_state["authenticated"] = True
-            st.success("Sikeres belepes")
+            st.success(t("auth.success"))
             st.rerun()
         else:
-            st.error("Hibas belepesi adatok")
+            st.error(t("auth.error"))
 
 
 def logout():

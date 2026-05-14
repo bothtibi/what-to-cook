@@ -4,6 +4,7 @@ from datetime import date, datetime
 import streamlit as st
 
 from src.db import execute, execute_many, execute_transaction, fetchall, fetchone
+from src.i18n import t
 
 
 def build_backup_payload():
@@ -40,7 +41,7 @@ def build_backup_payload():
 def download_backup_button():
     payload = build_backup_payload()
     st.download_button(
-        label="JSON export letoltese",
+        label=t("backup.download"),
         data=json.dumps(payload, ensure_ascii=False, indent=2),
         file_name="meal_memory_backup.json",
         mime="application/json",
