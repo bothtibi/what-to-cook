@@ -1,3 +1,4 @@
+import html
 from datetime import date, timedelta
 
 import streamlit as st
@@ -10,6 +11,22 @@ def _group_by_day(entries):
     for item in entries:
         grouped.setdefault(item["cooked_date"], []).append(item)
     return grouped
+
+
+def _category_class(category):
+    normalized = str(category).strip().lower()
+    mapping = {
+        "leves": "category-leves",
+        "főétel": "category-foetel",
+        "foetel": "category-foetel",
+        "reggeli": "category-reggeli",
+        "vacsora": "category-vacsora",
+    }
+    return mapping.get(normalized, "category-other")
+
+
+def _category_badge(category):
+    return f'<span class="category-pill {_category_class(category)}">{html.escape(str(category))}</span>'
 
 
 def render_history_page():
@@ -36,7 +53,11 @@ def render_history_page():
             with st.container(border=True):
                 st.markdown(f"### {cooked_day}")
                 for item in items:
-                    st.markdown(f"- **{item['recipe_name']}** ({item['category']}, {item['days_planned']} nap)")
+                    st.markdown(
+                        f"- **{html.escape(str(item['recipe_name']))}** "
+                        f"{_category_badge(item['category'])} {item['days_planned']} nap",
+                        unsafe_allow_html=True,
+                    )
                     extras = []
                     if item["quantity_note"]:
                         extras.append(f"mennyiseg: {item['quantity_note']}")
@@ -50,7 +71,10 @@ def render_history_page():
         for item in entries:
             with st.container(border=True):
                 st.markdown(f"**{item['cooked_date']} - {item['recipe_name']}**")
-                st.write(f"Kategoria: {item['category']} | Napok: {item['days_planned']}")
+                st.markdown(
+                    f"{_category_badge(item['category'])} {item['days_planned']} napra főzve",
+                    unsafe_allow_html=True,
+                )
                 if item["quantity_note"]:
                     st.write(f"Mennyiseg: {item['quantity_note']}")
                 if item["meal_group_id"]:

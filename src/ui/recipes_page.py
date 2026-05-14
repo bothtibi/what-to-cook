@@ -1,4 +1,5 @@
 import html
+from textwrap import dedent
 
 import streamlit as st
 
@@ -28,25 +29,42 @@ def _initials(name):
     return "".join(word[0] for word in words[:2])
 
 
+def _category_class(category):
+    normalized = str(category).strip().lower()
+    mapping = {
+        "leves": "category-leves",
+        "főétel": "category-foetel",
+        "foetel": "category-foetel",
+        "reggeli": "category-reggeli",
+        "vacsora": "category-vacsora",
+    }
+    return mapping.get(normalized, "category-other")
+
+
+def _category_badge(category):
+    return f'<span class="category-pill {_category_class(category)}">{html.escape(str(category))}</span>'
+
+
 def _recipe_list_header(recipe):
     name = html.escape(str(recipe["name"]))
-    category = html.escape(str(recipe["category"]))
     difficulty = html.escape(str(recipe["difficulty"]))
     initials = html.escape(_initials(recipe["name"]))
     st.markdown(
-        f"""
+        dedent(
+            f"""
         <div class="list-row">
             <div class="recipe-row" style="margin:0;">
                 <div class="recipe-thumb">{initials}</div>
                 <div>
                     <div class="recipe-name">{name}</div>
-                    <div class="recipe-meta">{category} · {int(recipe["prep_time_minutes"])} perc
+                    <div class="recipe-meta">{_category_badge(recipe["category"])} {int(recipe["prep_time_minutes"])} perc
                         <span class="difficulty-pill">{difficulty}</span>
                     </div>
                 </div>
             </div>
         </div>
         """,
+        ).strip(),
         unsafe_allow_html=True,
     )
 

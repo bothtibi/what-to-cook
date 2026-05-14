@@ -1,4 +1,5 @@
 import html
+from textwrap import dedent
 from datetime import date
 
 import streamlit as st
@@ -25,21 +26,38 @@ def _initials(name):
     return "".join(word[0] for word in words[:2])
 
 
+def _category_class(category):
+    normalized = str(category).strip().lower()
+    mapping = {
+        "leves": "category-leves",
+        "főétel": "category-foetel",
+        "foetel": "category-foetel",
+        "reggeli": "category-reggeli",
+        "vacsora": "category-vacsora",
+    }
+    return mapping.get(normalized, "category-other")
+
+
+def _category_badge(category):
+    return f'<span class="category-pill {_category_class(category)}">{html.escape(str(category))}</span>'
+
+
 def _recipe_line(recipe):
     name = html.escape(str(recipe["name"]))
-    category = html.escape(str(recipe["category"]))
     difficulty = html.escape(str(recipe["difficulty"]))
-    return f"""
+    return dedent(
+        f"""
     <div class="recipe-row">
         <div class="recipe-thumb">{html.escape(_initials(recipe["name"]))}</div>
         <div>
             <div class="recipe-name">{name}</div>
-            <div class="recipe-meta">{category} · {int(recipe["prep_time_minutes"])} perc
+            <div class="recipe-meta">{_category_badge(recipe["category"])} {int(recipe["prep_time_minutes"])} perc
                 <span class="difficulty-pill">{difficulty}</span>
             </div>
         </div>
     </div>
     """
+    ).strip()
 
 
 def _reason_text(reasons):
@@ -91,7 +109,8 @@ def _render_combo_card(combo, idx):
     soup_recipe = combo["soup"]["recipe"]
     main_recipe = combo["main"]["recipe"]
     st.markdown(
-        f"""
+        dedent(
+            f"""
         <div class="recommend-card">
             <div class="rank-badge">{idx}</div>
             {_recipe_line(soup_recipe)}
@@ -99,7 +118,8 @@ def _render_combo_card(combo, idx):
             {_recipe_line(main_recipe)}
             <div class="card-note">{_reason_text(combo["reasons"])}</div>
         </div>
-        """,
+        """
+        ).strip(),
         unsafe_allow_html=True,
     )
     meal_group_id = f"combo-{date.today().isoformat()}-{idx}"
@@ -109,13 +129,15 @@ def _render_combo_card(combo, idx):
 def _render_single_card(item, idx):
     recipe = item["recipe"]
     st.markdown(
-        f"""
+        dedent(
+            f"""
         <div class="recommend-card">
             <div class="rank-badge">{idx}</div>
             {_recipe_line(recipe)}
             <div class="card-note">{_reason_text(item["reasons"])}</div>
         </div>
-        """,
+        """
+        ).strip(),
         unsafe_allow_html=True,
     )
     _save_history_form(recipe, f"single_{idx}")
@@ -123,12 +145,14 @@ def _render_single_card(item, idx):
 
 def render_recommendation_page():
     st.markdown(
-        """
+        dedent(
+            """
         <div class="page-panel">
             <h2 style="margin:0;">Mit főzzünk ma?</h2>
             <div class="section-kicker">Válassz egy ajánlást, vagy kérj új ötleteket.</div>
         </div>
         """,
+        ).strip(),
         unsafe_allow_html=True,
     )
     mode_col, category_col, limit_col, refresh_col = st.columns([2.7, 1.8, 1.1, 1.1])

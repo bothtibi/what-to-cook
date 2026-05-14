@@ -226,6 +226,42 @@ st.markdown(
         color: #15803d;
         background: #f0fdf4;
     }
+    .category-pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.12rem 0.48rem;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        margin-right: 0.25rem;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .category-leves {
+        background: #ecfdf3;
+        color: #027a48;
+        border-color: #abefc6;
+    }
+    .category-foetel {
+        background: #fff4ed;
+        color: #c4320a;
+        border-color: #ffd6ae;
+    }
+    .category-reggeli {
+        background: #eff8ff;
+        color: #175cd3;
+        border-color: #b2ddff;
+    }
+    .category-vacsora {
+        background: #f4f3ff;
+        color: #5925dc;
+        border-color: #d9d6fe;
+    }
+    .category-other {
+        background: #f2f4f7;
+        color: #344054;
+        border-color: #e4e7ec;
+    }
     .combo-plus {
         color: #101828;
         text-align: center;
