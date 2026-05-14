@@ -201,33 +201,42 @@ def _recipe_form(defaults, form_key, submit_label):
 def render_recipes_page():
     st.subheader(t("recipes.title"))
 
-    with st.expander(t("recipes.new"), expanded=False):
-        submitted, data = _recipe_form(
-            {
-                "name": "",
-                "category": DEFAULT_CATEGORIES[0],
-                "tags": "",
-                "prep_time_minutes": 30,
-                "difficulty": "Közepes",
-                "ingredients_text": "",
-                "instructions_text": "",
-                "notes_text": "",
-                "favorite_tibi": False,
-                "favorite_melinda": False,
-                "dislike_tibi": False,
-                "dislike_melinda": False,
-            },
-            "create_recipe_form",
-            t("recipes.save"),
-        )
+    if "show_create_recipe_form" not in st.session_state:
+        st.session_state["show_create_recipe_form"] = False
+    if st.button(t("recipes.new"), type="primary"):
+        st.session_state["show_create_recipe_form"] = not st.session_state["show_create_recipe_form"]
+        st.rerun()
 
-        if submitted and data["name"]:
-            if recipe_name_exists(data["name"]):
-                st.warning(t("recipes.exists"))
-            else:
-                create_recipe(data)
-                st.success(t("recipes.created"))
-                st.rerun()
+    if st.session_state["show_create_recipe_form"]:
+        with st.container(border=True):
+            st.markdown(f"### {t('recipes.new')}")
+            submitted, data = _recipe_form(
+                {
+                    "name": "",
+                    "category": DEFAULT_CATEGORIES[0],
+                    "tags": "",
+                    "prep_time_minutes": 30,
+                    "difficulty": "Közepes",
+                    "ingredients_text": "",
+                    "instructions_text": "",
+                    "notes_text": "",
+                    "favorite_tibi": False,
+                    "favorite_melinda": False,
+                    "dislike_tibi": False,
+                    "dislike_melinda": False,
+                },
+                "create_recipe_form",
+                t("recipes.save"),
+            )
+
+            if submitted and data["name"]:
+                if recipe_name_exists(data["name"]):
+                    st.warning(t("recipes.exists"))
+                else:
+                    create_recipe(data)
+                    st.success(t("recipes.created"))
+                    st.session_state["show_create_recipe_form"] = False
+                    st.rerun()
 
     if "recipe_search" in st.session_state:
         st.session_state["recipe_search_query"] = st.session_state.pop("recipe_search")

@@ -246,18 +246,18 @@ def _render_mode_picker():
 
 
 def _render_count_picker():
-    count_options = [1, 2, 3, 4, 5, 6]
-    if st.session_state.get("recommendation_limit") not in count_options:
+    if st.session_state.get("recommendation_limit") not in range(1, 7):
         st.session_state["recommendation_limit"] = 3
 
-    st.caption(t("recommendations.count"))
-    cols = st.columns(len(count_options))
-    for col, count in zip(cols, count_options):
-        active = st.session_state["recommendation_limit"] == count
-        if col.button(str(count), key=f"recommendation_limit_{count}", type="primary" if active else "secondary", use_container_width=True):
-            st.session_state["recommendation_limit"] = count
-            st.rerun()
-    return st.session_state["recommendation_limit"]
+    return int(
+        st.number_input(
+            t("recommendations.count"),
+            min_value=1,
+            max_value=6,
+            step=1,
+            key="recommendation_limit",
+        )
+    )
 
 
 def render_recommendation_page():

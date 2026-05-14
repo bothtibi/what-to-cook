@@ -10,7 +10,7 @@ from src.ui.recommendation_page import render_recommendation_page
 from src.ui.settings_page import render_settings_page
 
 
-st.set_page_config(page_title=t("app.page_title"), layout="wide")
+st.set_page_config(page_title=t("app.page_title"), layout="wide", initial_sidebar_state="expanded")
 init_db()
 
 st.markdown(
@@ -33,7 +33,9 @@ st.markdown(
         padding-top: 1rem;
         width: 13.5rem;
     }
-    [data-testid="collapsedControl"] {
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"],
+    button[kind="header"] {
         display: none;
     }
     [data-testid="stSidebar"] h1 {
@@ -104,6 +106,17 @@ st.markdown(
     .stButton > button:hover {
         border-color: #7c5ce8;
         color: #4f2fc3;
+    }
+    .stButton > button[kind="primary"] {
+        border-color: #6d4bdc;
+        background: linear-gradient(180deg, #8b6df0 0%, #6d4bdc 100%);
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(91, 53, 213, 0.22);
+    }
+    .stButton > button[kind="primary"]:hover {
+        border-color: #5638c8;
+        background: #5638c8;
+        color: #ffffff;
     }
     .stDownloadButton > button,
     .stFormSubmitButton > button {
