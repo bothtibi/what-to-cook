@@ -5,10 +5,6 @@ from src.recipes import (
     create_recipe,
     list_recipes,
     recipe_name_exists,
-    set_dislike_melinda,
-    set_dislike_tibi,
-    set_favorite_melinda,
-    set_favorite_tibi,
     update_recipe,
 )
 
@@ -23,45 +19,160 @@ def _tag_chips(tags_text):
     st.markdown(chips, unsafe_allow_html=True)
 
 
+PREFERENCE_OPTIONS = ["Semleges", "Kedvenc", "Nem szereti"]
+
+
+def _preference_value(is_favorite, is_disliked):
+    if is_disliked:
+        return "Nem szereti"
+    if is_favorite:
+        return "Kedvenc"
+    return "Semleges"
+
+
+def _preference_flags(tibi_preference, melinda_preference):
+    return {
+        "favorite_tibi": tibi_preference == "Kedvenc",
+        "favorite_melinda": melinda_preference == "Kedvenc",
+        "dislike_tibi": tibi_preference == "Nem szereti",
+        "dislike_melinda": melinda_preference == "Nem szereti",
+    }
+
+
+def _preference_badges(recipe):
+    badges = []
+    people = [
+        ("Tibi", recipe["favorite_tibi"], recipe["dislike_tibi"]),
+        ("Melinda", recipe["favorite_melinda"], recipe["dislike_melinda"]),
+    ]
+    for name, is_favorite, is_disliked in people:
+        if is_disliked:
+            badges.append(
+                f"<span style='background:#fef2f2;color:#991b1b;padding:3px 8px;border-radius:6px;font-size:12px'>{name}: nem szereti</span>"
+            )
+        elif is_favorite:
+            badges.append(
+                f"<span style='background:#fefce8;color:#854d0e;padding:3px 8px;border-radius:6px;font-size:12px'>{name}: kedvenc</span>"
+            )
+    if badges:
+        st.markdown(" ".join(badges), unsafe_allow_html=True)
+
+
+def _recipe_form(defaults, form_key, submit_label):
+    with st.form(form_key):
+        st.markdown("##### Alapadatok")
+        top_left, top_right = st.columns([2, 1])
+        with top_left:
+            name = st.text_input("Név", value=defaults.get("name", ""), key=f"{form_key}_name")
+            tags = st.text_input(
+                "Tagek",
+                value=defaults.get("tags", ""),
+                placeholder="gyors, húsos, téli",
+                key=f"{form_key}_tags",
+            )
+        with top_right:
+            category_value = defaults.get("category", DEFAULT_CATEGORIES[0])
+            category = st.selectbox(
+                "Kategória",
+                DEFAULT_CATEGORIES,
+                index=DEFAULT_CATEGORIES.index(category_value) if category_value in DEFAULT_CATEGORIES else 0,
+                key=f"{form_key}_category",
+            )
+            difficulty_value = defaults.get("difficulty", "Közepes")
+            difficulty = st.selectbox(
+                "Nehézség",
+                RECIPE_DIFFICULTIES,
+                index=RECIPE_DIFFICULTIES.index(difficulty_value) if difficulty_value in RECIPE_DIFFICULTIES else 1,
+                key=f"{form_key}_difficulty",
+            )
+            prep_time_minutes = st.number_input(
+                "Előkészítési idő (perc)",
+                min_value=0,
+                value=int(defaults.get("prep_time_minutes", 30)),
+                key=f"{form_key}_prep_time",
+            )
+
+        st.markdown("##### Recept")
+        ingredients_text = st.text_area(
+            "Hozzávalók",
+            value=defaults.get("ingredients_text", ""),
+            height=110,
+            key=f"{form_key}_ingredients",
+        )
+        instructions_text = st.text_area(
+            "Elkészítés",
+            value=defaults.get("instructions_text", ""),
+            height=140,
+            key=f"{form_key}_instructions",
+        )
+        notes_text = st.text_area(
+            "Megjegyzés",
+            value=defaults.get("notes_text", ""),
+            height=80,
+            key=f"{form_key}_notes",
+        )
+
+        st.markdown("##### Ízlések")
+        pref_left, pref_right = st.columns(2)
+        tibi_default = _preference_value(defaults.get("favorite_tibi", False), defaults.get("dislike_tibi", False))
+        melinda_default = _preference_value(defaults.get("favorite_melinda", False), defaults.get("dislike_melinda", False))
+        tibi_preference = pref_left.selectbox(
+            "Tibi",
+            PREFERENCE_OPTIONS,
+            index=PREFERENCE_OPTIONS.index(tibi_default),
+            key=f"{form_key}_pref_tibi",
+        )
+        melinda_preference = pref_right.selectbox(
+            "Melinda",
+            PREFERENCE_OPTIONS,
+            index=PREFERENCE_OPTIONS.index(melinda_default),
+            key=f"{form_key}_pref_melinda",
+        )
+
+        submitted = st.form_submit_button(submit_label)
+
+    data = {
+        "name": name.strip(),
+        "category": category,
+        "tags": tags,
+        "prep_time_minutes": int(prep_time_minutes),
+        "difficulty": difficulty.strip(),
+        "ingredients_text": ingredients_text.strip(),
+        "instructions_text": instructions_text.strip(),
+        "notes_text": notes_text.strip(),
+        **_preference_flags(tibi_preference, melinda_preference),
+    }
+    return submitted, data
+
+
 def render_recipes_page():
     st.subheader("Receptek")
 
-    with st.expander("Uj recept felvetele", expanded=False):
-        with st.form("create_recipe_form"):
-            name = st.text_input("Nev")
-            category = st.selectbox("Kategoria", DEFAULT_CATEGORIES)
-            tags = st.text_input("Tagek (vesszovel elvalasztva)")
-            prep_time_minutes = st.number_input("Elokeszitesi ido (perc)", min_value=0, value=30)
-            difficulty = st.selectbox("Nehézség", RECIPE_DIFFICULTIES, index=1)
-            ingredients_text = st.text_area("Hozzavalok")
-            instructions_text = st.text_area("Elkeszites")
-            notes_text = st.text_area("Megjegyzes")
-            favorite_tibi = st.checkbox("Kedvenc Tibi")
-            favorite_melinda = st.checkbox("Kedvenc Melinda")
-            dislike_tibi = st.checkbox("Nem szereti Tibi")
-            dislike_melinda = st.checkbox("Nem szereti Melinda")
-            submitted = st.form_submit_button("Mentes")
+    with st.expander("Új recept felvétele", expanded=False):
+        submitted, data = _recipe_form(
+            {
+                "name": "",
+                "category": DEFAULT_CATEGORIES[0],
+                "tags": "",
+                "prep_time_minutes": 30,
+                "difficulty": "Közepes",
+                "ingredients_text": "",
+                "instructions_text": "",
+                "notes_text": "",
+                "favorite_tibi": False,
+                "favorite_melinda": False,
+                "dislike_tibi": False,
+                "dislike_melinda": False,
+            },
+            "create_recipe_form",
+            "Recept mentése",
+        )
 
-        if submitted and name.strip():
-            if recipe_name_exists(name):
+        if submitted and data["name"]:
+            if recipe_name_exists(data["name"]):
                 st.warning("Mar letezik ilyen nevu recept.")
             else:
-                create_recipe(
-                    {
-                        "name": name.strip(),
-                        "category": category,
-                        "tags": tags,
-                        "prep_time_minutes": int(prep_time_minutes),
-                        "difficulty": difficulty.strip(),
-                        "ingredients_text": ingredients_text.strip(),
-                        "instructions_text": instructions_text.strip(),
-                        "notes_text": notes_text.strip(),
-                        "favorite_tibi": favorite_tibi,
-                        "favorite_melinda": favorite_melinda,
-                        "dislike_tibi": dislike_tibi,
-                        "dislike_melinda": dislike_melinda,
-                    }
-                )
+                create_recipe(data)
                 st.success("Recept letrehozva.")
                 st.rerun()
 
@@ -88,90 +199,19 @@ def render_recipes_page():
         with st.container(border=True):
             head_col1, head_col2 = st.columns([3, 2])
             head_col1.markdown(f"### {recipe['name']}")
-            flags = []
-            if recipe["favorite_tibi"]:
-                flags.append("Kedvenc Tibi")
-            if recipe["favorite_melinda"]:
-                flags.append("Kedvenc Melinda")
-            if recipe["dislike_tibi"]:
-                flags.append("Nem szereti Tibi")
-            if recipe["dislike_melinda"]:
-                flags.append("Nem szereti Melinda")
-            suffix = f" | {', '.join(flags)}" if flags else ""
-            head_col2.caption(f"{recipe['category']} | {recipe['prep_time_minutes']} perc | {recipe['difficulty']}{suffix}")
+            head_col2.caption(f"{recipe['category']} | {recipe['prep_time_minutes']} perc | {recipe['difficulty']}")
+            _preference_badges(recipe)
             _tag_chips(recipe["tags"])
             st.write(recipe["ingredients_text"] or "-")
             st.write(recipe["instructions_text"] or "-")
-            q1, q2 = st.columns(2)
-            q3, q4 = st.columns(2)
-            if q1.button("Kedvenc Tibi", key=f"fav_tibi_{recipe['id']}"):
-                set_favorite_tibi(recipe["id"], not bool(recipe["favorite_tibi"]))
-                st.rerun()
-            if q2.button("Kedvenc Melinda", key=f"fav_melinda_{recipe['id']}"):
-                set_favorite_melinda(recipe["id"], not bool(recipe["favorite_melinda"]))
-                st.rerun()
-            if q3.button("Nem szereti Tibi", key=f"dis_tibi_{recipe['id']}"):
-                set_dislike_tibi(recipe["id"], not bool(recipe["dislike_tibi"]))
-                st.rerun()
-            if q4.button("Nem szereti Melinda", key=f"dis_melinda_{recipe['id']}"):
-                set_dislike_melinda(recipe["id"], not bool(recipe["dislike_melinda"]))
-                st.rerun()
 
-            with st.expander("Szerkesztes"):
-                with st.form(f"edit_recipe_{recipe['id']}"):
-                    name = st.text_input("Nev", value=recipe["name"])
-                    category = st.selectbox(
-                        "Kategoria",
-                        DEFAULT_CATEGORIES,
-                        index=DEFAULT_CATEGORIES.index(recipe["category"]) if recipe["category"] in DEFAULT_CATEGORIES else 0,
-                    )
-                    tags = st.text_input("Tagek", value=recipe["tags"])
-                    prep_time_minutes = st.number_input(
-                        "Elokeszitesi ido (perc)",
-                        min_value=0,
-                        value=int(recipe["prep_time_minutes"]),
-                        key=f"prep_{recipe['id']}",
-                    )
-                    difficulty_options = RECIPE_DIFFICULTIES
-                    difficulty = st.selectbox(
-                        "Nehézség",
-                        difficulty_options,
-                        index=difficulty_options.index(recipe["difficulty"]) if recipe["difficulty"] in difficulty_options else 1,
-                        key=f"diff_{recipe['id']}",
-                    )
-                    ingredients_text = st.text_area("Hozzavalok", value=recipe["ingredients_text"])
-                    instructions_text = st.text_area("Elkeszites", value=recipe["instructions_text"])
-                    notes_text = st.text_area("Megjegyzes", value=recipe["notes_text"])
-                    favorite_tibi = st.checkbox("Kedvenc Tibi", value=bool(recipe["favorite_tibi"]), key=f"f1_{recipe['id']}")
-                    favorite_melinda = st.checkbox(
-                        "Kedvenc Melinda", value=bool(recipe["favorite_melinda"]), key=f"f2_{recipe['id']}"
-                    )
-                    dislike_tibi = st.checkbox("Nem szereti Tibi", value=bool(recipe["dislike_tibi"]), key=f"d1_{recipe['id']}")
-                    dislike_melinda = st.checkbox(
-                        "Nem szereti Melinda", value=bool(recipe["dislike_melinda"]), key=f"d2_{recipe['id']}"
-                    )
-                    save = st.form_submit_button("Valtozasok mentese")
+            with st.expander("Szerkesztés"):
+                save, data = _recipe_form(recipe, f"edit_recipe_{recipe['id']}", "Változások mentése")
 
-                if save and name.strip():
-                    if recipe_name_exists(name, exclude_id=recipe["id"]):
+                if save and data["name"]:
+                    if recipe_name_exists(data["name"], exclude_id=recipe["id"]):
                         st.warning("Mar letezik ilyen nevu recept.")
                     else:
-                        update_recipe(
-                            recipe["id"],
-                            {
-                                "name": name.strip(),
-                                "category": category,
-                                "tags": tags,
-                                "prep_time_minutes": int(prep_time_minutes),
-                                "difficulty": difficulty.strip(),
-                                "ingredients_text": ingredients_text.strip(),
-                                "instructions_text": instructions_text.strip(),
-                                "notes_text": notes_text.strip(),
-                                "favorite_tibi": favorite_tibi,
-                                "favorite_melinda": favorite_melinda,
-                                "dislike_tibi": dislike_tibi,
-                                "dislike_melinda": dislike_melinda,
-                            },
-                        )
+                        update_recipe(recipe["id"], data)
                         st.success("Recept frissitve.")
                         st.rerun()
