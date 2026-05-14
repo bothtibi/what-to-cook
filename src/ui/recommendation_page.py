@@ -272,15 +272,15 @@ def render_recommendation_page():
         ).strip(),
         unsafe_allow_html=True,
     )
-    mode_area, refresh_area = st.columns([5, 1.2])
+    mode_area, count_area, refresh_area = st.columns([4.2, 0.9, 1.2], vertical_alignment="bottom")
     with mode_area:
         mode = _render_mode_picker()
+    with count_area:
+        limit = _render_count_picker()
     with refresh_area:
-        st.caption(" ")
         refresh_clicked = st.button(t("recommendations.refresh"), use_container_width=True)
     if refresh_clicked:
         st.rerun()
-    limit = _render_count_picker()
     st.write("")
     recent_data = recent_cooked_dates_by_recipe()
 

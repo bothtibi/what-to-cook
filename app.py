@@ -25,6 +25,9 @@ st.markdown(
         border-right: 1px solid #0f172a;
         min-width: 13.5rem;
         max-width: 13.5rem;
+        width: 13.5rem;
+        display: block;
+        visibility: visible;
     }
     [data-testid="stSidebar"] * {
         color: #f8fafc;
@@ -35,8 +38,14 @@ st.markdown(
     }
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapsedControl"],
-    button[kind="header"] {
-        display: none;
+    [data-testid="stSidebarCollapseButton"],
+    button[aria-label="Close sidebar"],
+    button[aria-label="Open sidebar"],
+    button[title="Close sidebar"],
+    button[title="Open sidebar"] {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
     [data-testid="stSidebar"] h1 {
         color: #ffffff;
