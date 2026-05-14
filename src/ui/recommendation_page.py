@@ -4,7 +4,6 @@ from datetime import date
 
 import streamlit as st
 
-from src.config import DEFAULT_CATEGORIES
 from src.history import add_history_entries, add_history_entry, recent_cooked_dates_by_recipe
 from src.i18n import category_label, difficulty_label, t
 from src.recipes import get_recipe
@@ -226,6 +225,41 @@ def _render_single_card(item, idx, recent_data):
     return preview_id
 
 
+def _render_mode_picker():
+    mode_options = [
+        ("combo", t("recommendations.mode_combo")),
+        ("soup", t("recommendations.mode_soup")),
+        ("main", t("recommendations.mode_main")),
+        ("single", t("recommendations.mode_single")),
+    ]
+    if st.session_state.get("recommendation_mode") not in {key for key, _ in mode_options}:
+        st.session_state["recommendation_mode"] = "combo"
+
+    st.caption(t("recommendations.mode"))
+    cols = st.columns(len(mode_options))
+    for col, (mode_key, label) in zip(cols, mode_options):
+        active = st.session_state["recommendation_mode"] == mode_key
+        if col.button(label, key=f"recommendation_mode_{mode_key}", type="primary" if active else "secondary", use_container_width=True):
+            st.session_state["recommendation_mode"] = mode_key
+            st.rerun()
+    return st.session_state["recommendation_mode"]
+
+
+def _render_count_picker():
+    count_options = [1, 2, 3, 4, 5, 6]
+    if st.session_state.get("recommendation_limit") not in count_options:
+        st.session_state["recommendation_limit"] = 3
+
+    st.caption(t("recommendations.count"))
+    cols = st.columns(len(count_options))
+    for col, count in zip(cols, count_options):
+        active = st.session_state["recommendation_limit"] == count
+        if col.button(str(count), key=f"recommendation_limit_{count}", type="primary" if active else "secondary", use_container_width=True):
+            st.session_state["recommendation_limit"] = count
+            st.rerun()
+    return st.session_state["recommendation_limit"]
+
+
 def render_recommendation_page():
     st.markdown(
         dedent(
@@ -238,29 +272,15 @@ def render_recommendation_page():
         ).strip(),
         unsafe_allow_html=True,
     )
-    mode_col, category_col, limit_col, refresh_col = st.columns([2.7, 1.8, 1.1, 1.1])
-    mode_options = [
-        ("combo", t("recommendations.mode_combo")),
-        ("soup", t("recommendations.mode_soup")),
-        ("main", t("recommendations.mode_main")),
-        ("single", t("recommendations.mode_single")),
-    ]
-    selected_mode_label = mode_col.radio(
-        t("recommendations.mode"),
-        [label for _, label in mode_options],
-        horizontal=True,
-        label_visibility="collapsed",
-    )
-    mode = next(key for key, label in mode_options if label == selected_mode_label)
-    category = category_col.selectbox(
-        t("recommendations.category"),
-        [""] + DEFAULT_CATEGORIES,
-        format_func=lambda value: t("category.all") if value == "" else category_label(value),
-        label_visibility="collapsed",
-    )
-    limit = limit_col.selectbox(t("recommendations.count"), [1, 2, 3, 4, 5, 6], index=2, label_visibility="collapsed")
-    if refresh_col.button(t("recommendations.refresh"), use_container_width=True):
+    mode_area, refresh_area = st.columns([5, 1.2])
+    with mode_area:
+        mode = _render_mode_picker()
+    with refresh_area:
+        st.caption(" ")
+        refresh_clicked = st.button(t("recommendations.refresh"), use_container_width=True)
+    if refresh_clicked:
         st.rerun()
+    limit = _render_count_picker()
     st.write("")
     recent_data = recent_cooked_dates_by_recipe()
 
@@ -285,7 +305,7 @@ def render_recommendation_page():
     elif mode == "main":
         effective_category = "Főétel"
     else:
-        effective_category = category
+        effective_category = ""
 
     recipes = recommend_recipes(category=effective_category, limit=limit)
     if not recipes:
