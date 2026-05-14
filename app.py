@@ -16,41 +16,49 @@ st.markdown(
     """
     <style>
     .stApp {
-        background: #f7f7f5;
-        color: #1f2933;
+        background: #f6f7fb;
+        color: #101828;
     }
     [data-testid="stSidebar"] {
-        background: #ffffff;
-        border-right: 1px solid #e5e7eb;
+        background: linear-gradient(180deg, #121c2b 0%, #172435 100%);
+        border-right: 1px solid #0f172a;
     }
     [data-testid="stSidebar"] * {
-        color: #1f2933;
+        color: #f8fafc;
+    }
+    [data-testid="stSidebar"] .stRadio label {
+        color: #e5e7eb;
+    }
+    [data-testid="stSidebar"] [role="radiogroup"] label {
+        border-radius: 8px;
+        padding: 0.35rem 0.45rem;
     }
     .block-container {
-        max-width: 1120px;
-        padding-top: 1.4rem;
+        max-width: 1180px;
+        padding-top: 1.2rem;
         padding-bottom: 3rem;
     }
     h1 {
-        font-size: 2rem;
-        font-weight: 650;
+        font-size: 1.8rem;
+        font-weight: 700;
         letter-spacing: 0;
-        color: #111827;
+        color: #101828;
     }
     h2, h3 {
-        color: #111827;
+        color: #101828;
         letter-spacing: 0;
     }
     [data-testid="stHeader"] {
-        background: rgba(247, 247, 245, 0.92);
+        background: rgba(246, 247, 251, 0.9);
     }
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        border-color: #e5e7eb;
-        border-radius: 8px;
+        border-color: #e7e9f0;
+        border-radius: 14px;
         background: #ffffff;
+        box-shadow: 0 10px 30px rgba(16, 24, 40, 0.05);
     }
     div[data-testid="stMetricValue"] {
-        color: #1f2933;
+        color: #101828;
         font-size: 1.5rem;
     }
     div[data-testid="stMetricLabel"] {
@@ -58,30 +66,154 @@ st.markdown(
     }
     .stButton > button {
         border-radius: 8px;
-        border: 1px solid #d1d5db;
+        border: 1px solid #ddd6fe;
         background: #ffffff;
-        color: #1f2933;
+        color: #5b35d5;
         box-shadow: none;
+        font-weight: 600;
     }
     .stButton > button:hover {
-        border-color: #9ca3af;
-        color: #111827;
+        border-color: #7c5ce8;
+        color: #4f2fc3;
     }
     .stDownloadButton > button,
     .stFormSubmitButton > button {
         border-radius: 8px;
-        border: 1px solid #111827;
-        background: #111827;
+        border: 1px solid #6d4bdc;
+        background: linear-gradient(180deg, #7c5ce8 0%, #6042d0 100%);
         color: #ffffff;
+        font-weight: 700;
     }
     .stDownloadButton > button:hover,
     .stFormSubmitButton > button:hover {
-        border-color: #374151;
-        background: #374151;
+        border-color: #5638c8;
+        background: #5638c8;
         color: #ffffff;
+    }
+    .stTextInput input,
+    .stNumberInput input,
+    textarea,
+    [data-baseweb="select"] > div {
+        border-radius: 8px;
+        border-color: #e5e7eb;
+    }
+    div[role="radiogroup"] {
+        gap: 0.35rem;
+    }
+    div[role="radiogroup"] label {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 0.35rem 0.65rem;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] label {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: transparent;
     }
     [data-baseweb="tag"] {
         border-radius: 6px;
+    }
+    .page-panel {
+        background: #ffffff;
+        border: 1px solid #e7e9f0;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 12px 34px rgba(16, 24, 40, 0.06);
+        margin-bottom: 1rem;
+    }
+    .section-kicker {
+        color: #667085;
+        font-size: 0.85rem;
+        margin-top: -0.35rem;
+        margin-bottom: 1rem;
+    }
+    .recommend-card {
+        border: 1px solid #e7e9f0;
+        border-radius: 14px;
+        background: #ffffff;
+        padding: 0.9rem;
+        min-height: 310px;
+        box-shadow: 0 8px 26px rgba(16, 24, 40, 0.05);
+        position: relative;
+    }
+    .rank-badge {
+        position: absolute;
+        top: -0.65rem;
+        left: 0.75rem;
+        width: 1.55rem;
+        height: 1.55rem;
+        border-radius: 999px;
+        background: #7c5ce8;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .recipe-row {
+        display: grid;
+        grid-template-columns: 82px 1fr;
+        gap: 0.8rem;
+        align-items: center;
+        margin: 0.45rem 0;
+    }
+    .recipe-thumb {
+        width: 82px;
+        height: 66px;
+        border-radius: 14px;
+        background: radial-gradient(circle at 32% 28%, #fff7d6 0%, #f2b84b 35%, #b45f1f 100%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 8px 18px rgba(16,24,40,0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.45rem;
+        text-transform: uppercase;
+    }
+    .recipe-name {
+        font-weight: 700;
+        color: #101828;
+        margin-bottom: 0.15rem;
+    }
+    .recipe-meta {
+        color: #667085;
+        font-size: 0.82rem;
+    }
+    .difficulty-pill {
+        display: inline-block;
+        border-radius: 6px;
+        padding: 0.08rem 0.38rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-left: 0.25rem;
+        border: 1px solid #bbf7d0;
+        color: #15803d;
+        background: #f0fdf4;
+    }
+    .combo-plus {
+        color: #101828;
+        text-align: center;
+        font-weight: 800;
+        font-size: 1.35rem;
+        line-height: 1;
+        margin: 0.15rem 0;
+    }
+    .card-note {
+        color: #667085;
+        font-size: 0.82rem;
+        text-align: center;
+        margin-top: 0.65rem;
+        min-height: 1.2rem;
+    }
+    .list-row {
+        border: 1px solid #e7e9f0;
+        border-radius: 12px;
+        padding: 0.75rem;
+        background: #ffffff;
+        margin-bottom: 0.55rem;
+        box-shadow: 0 6px 18px rgba(16, 24, 40, 0.035);
     }
     </style>
     """,

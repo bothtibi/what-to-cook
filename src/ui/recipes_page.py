@@ -1,3 +1,5 @@
+import html
+
 import streamlit as st
 
 from src.config import DEFAULT_CATEGORIES, RECIPE_DIFFICULTIES
@@ -17,6 +19,36 @@ def _tag_chips(tags_text):
         [f"<span style='background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:6px;font-size:12px'>{tag}</span>" for tag in tags]
     )
     st.markdown(chips, unsafe_allow_html=True)
+
+
+def _initials(name):
+    words = [word for word in str(name).split() if word]
+    if not words:
+        return "R"
+    return "".join(word[0] for word in words[:2])
+
+
+def _recipe_list_header(recipe):
+    name = html.escape(str(recipe["name"]))
+    category = html.escape(str(recipe["category"]))
+    difficulty = html.escape(str(recipe["difficulty"]))
+    initials = html.escape(_initials(recipe["name"]))
+    st.markdown(
+        f"""
+        <div class="list-row">
+            <div class="recipe-row" style="margin:0;">
+                <div class="recipe-thumb">{initials}</div>
+                <div>
+                    <div class="recipe-name">{name}</div>
+                    <div class="recipe-meta">{category} · {int(recipe["prep_time_minutes"])} perc
+                        <span class="difficulty-pill">{difficulty}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 PREFERENCE_OPTIONS = ["Semleges", "Kedvenc", "Nem szereti"]
@@ -197,21 +229,29 @@ def render_recipes_page():
 
     for recipe in recipes:
         with st.container(border=True):
-            head_col1, head_col2 = st.columns([3, 2])
-            head_col1.markdown(f"### {recipe['name']}")
-            head_col2.caption(f"{recipe['category']} | {recipe['prep_time_minutes']} perc | {recipe['difficulty']}")
+            _recipe_list_header(recipe)
             _preference_badges(recipe)
             _tag_chips(recipe["tags"])
-            st.write(recipe["ingredients_text"] or "-")
-            st.write(recipe["instructions_text"] or "-")
 
-            with st.expander("Szerkesztés"):
-                save, data = _recipe_form(recipe, f"edit_recipe_{recipe['id']}", "Változások mentése")
+            with st.expander("Részletek és szerkesztés"):
+                details_tab, edit_tab = st.tabs(["Részletek", "Szerkesztés"])
+                with details_tab:
+                    left, right = st.columns(2)
+                    left.markdown("##### Hozzávalók")
+                    left.write(recipe["ingredients_text"] or "-")
+                    right.markdown("##### Elkészítés")
+                    right.write(recipe["instructions_text"] or "-")
+                    if recipe["notes_text"]:
+                        st.markdown("##### Megjegyzés")
+                        st.write(recipe["notes_text"])
 
-                if save and data["name"]:
-                    if recipe_name_exists(data["name"], exclude_id=recipe["id"]):
-                        st.warning("Mar letezik ilyen nevu recept.")
-                    else:
-                        update_recipe(recipe["id"], data)
-                        st.success("Recept frissitve.")
-                        st.rerun()
+                with edit_tab:
+                    save, data = _recipe_form(recipe, f"edit_recipe_{recipe['id']}", "Változások mentése")
+
+                    if save and data["name"]:
+                        if recipe_name_exists(data["name"], exclude_id=recipe["id"]):
+                            st.warning("Mar letezik ilyen nevu recept.")
+                        else:
+                            update_recipe(recipe["id"], data)
+                            st.success("Recept frissitve.")
+                            st.rerun()

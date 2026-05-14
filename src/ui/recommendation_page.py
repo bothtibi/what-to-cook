@@ -1,3 +1,4 @@
+import html
 from datetime import date
 
 import streamlit as st
@@ -17,56 +18,64 @@ def _tag_chips(tags_text):
     st.markdown(chips, unsafe_allow_html=True)
 
 
+def _initials(name):
+    words = [word for word in str(name).split() if word]
+    if not words:
+        return "R"
+    return "".join(word[0] for word in words[:2])
+
+
+def _recipe_line(recipe):
+    name = html.escape(str(recipe["name"]))
+    category = html.escape(str(recipe["category"]))
+    difficulty = html.escape(str(recipe["difficulty"]))
+    return f"""
+    <div class="recipe-row">
+        <div class="recipe-thumb">{html.escape(_initials(recipe["name"]))}</div>
+        <div>
+            <div class="recipe-name">{name}</div>
+            <div class="recipe-meta">{category} · {int(recipe["prep_time_minutes"])} perc
+                <span class="difficulty-pill">{difficulty}</span>
+            </div>
+        </div>
+    </div>
+    """
+
+
+def _reason_text(reasons):
+    if not reasons:
+        return "Kiegyensúlyozott választás mára."
+    return html.escape(" · ".join(reasons[:2]))
+
+
 def _save_history_form(recipe, form_key_prefix, meal_group_id=""):
     with st.form(f"{form_key_prefix}_{recipe['id']}"):
-        st.caption("Ezt megfoztuk")
-        cooked_date = st.date_input("Mikor?", value=date.today(), key=f"date_{form_key_prefix}_{recipe['id']}")
-        days_planned = st.number_input(
-            "Hany napra fozve?",
-            min_value=1,
-            max_value=14,
-            value=1,
-            key=f"days_{form_key_prefix}_{recipe['id']}",
-        )
-        quantity_note = st.text_input("Mennyiseg roviden", key=f"qty_{form_key_prefix}_{recipe['id']}")
-        notes = st.text_area("Megjegyzes", key=f"note_{form_key_prefix}_{recipe['id']}")
-        submit = st.form_submit_button("Mentes a history-ba")
+        submit = st.form_submit_button("Ezt főzzük", use_container_width=True)
 
     if submit:
         add_history_entry(
             recipe_id=recipe["id"],
-            cooked_date=str(cooked_date),
-            days_planned=int(days_planned),
-            quantity_note=quantity_note.strip(),
+            cooked_date=date.today().isoformat(),
+            days_planned=1,
+            quantity_note="",
             meal_group_id=meal_group_id.strip(),
-            notes=notes.strip(),
+            notes="",
         )
-        st.success("History bejegyzes mentve.")
+        st.success("History bejegyzés mentve.")
         st.rerun()
 
 
 def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_group_id):
     with st.form(form_key_prefix):
-        st.caption("Ezt a kombinaciot megfoztuk")
-        cooked_date = st.date_input("Mikor?", value=date.today(), key=f"date_{form_key_prefix}")
-        days_planned = st.number_input(
-            "Hany napra fozve?",
-            min_value=1,
-            max_value=14,
-            value=1,
-            key=f"days_{form_key_prefix}",
-        )
-        quantity_note = st.text_input("Mennyiseg roviden", key=f"qty_{form_key_prefix}")
-        notes = st.text_area("Megjegyzes", key=f"note_{form_key_prefix}")
-        submit = st.form_submit_button("Kombinacio mentese a history-ba")
+        submit = st.form_submit_button("Ezt főzzük", use_container_width=True)
 
     if submit:
         common = {
-            "cooked_date": str(cooked_date),
-            "days_planned": int(days_planned),
-            "quantity_note": quantity_note.strip(),
+            "cooked_date": date.today().isoformat(),
+            "days_planned": 1,
+            "quantity_note": "",
             "meal_group_id": meal_group_id.strip(),
-            "notes": notes.strip(),
+            "notes": "",
         }
         add_history_entries(
             [
@@ -74,19 +83,66 @@ def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_gro
                 {"recipe_id": main_recipe["id"], **common},
             ]
         )
-        st.success("Kombinacio history bejegyzes mentve.")
+        st.success("Kombináció history bejegyzés mentve.")
         st.rerun()
 
 
-def render_recommendation_page():
-    st.subheader("Mit főzzünk?")
-    mode_col, col1, col2 = st.columns([2.2, 2, 1.2])
-    mode = mode_col.selectbox(
-        "Mód",
-        ["Csak recept", "Csak leves", "Csak főétel", "Leves + főétel"],
+def _render_combo_card(combo, idx):
+    soup_recipe = combo["soup"]["recipe"]
+    main_recipe = combo["main"]["recipe"]
+    st.markdown(
+        f"""
+        <div class="recommend-card">
+            <div class="rank-badge">{idx}</div>
+            {_recipe_line(soup_recipe)}
+            <div class="combo-plus">+</div>
+            {_recipe_line(main_recipe)}
+            <div class="card-note">{_reason_text(combo["reasons"])}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-    category = col1.selectbox("Kategória (opcionális)", [""] + DEFAULT_CATEGORIES)
-    limit = col2.selectbox("Ajánlatok száma", [1, 2, 3, 4, 5, 6], index=2)
+    meal_group_id = f"combo-{date.today().isoformat()}-{idx}"
+    _save_combo_history_form(soup_recipe, main_recipe, f"combo_{idx}", meal_group_id=meal_group_id)
+
+
+def _render_single_card(item, idx):
+    recipe = item["recipe"]
+    st.markdown(
+        f"""
+        <div class="recommend-card">
+            <div class="rank-badge">{idx}</div>
+            {_recipe_line(recipe)}
+            <div class="card-note">{_reason_text(item["reasons"])}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    _save_history_form(recipe, f"single_{idx}")
+
+
+def render_recommendation_page():
+    st.markdown(
+        """
+        <div class="page-panel">
+            <h2 style="margin:0;">Mit főzzünk ma?</h2>
+            <div class="section-kicker">Válassz egy ajánlást, vagy kérj új ötleteket.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    mode_col, category_col, limit_col, refresh_col = st.columns([2.7, 1.8, 1.1, 1.1])
+    mode = mode_col.radio(
+        "Mód",
+        ["Leves + főétel", "Csak leves", "Csak főétel", "Csak recept"],
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+    category = category_col.selectbox("Kategória", [""] + DEFAULT_CATEGORIES, label_visibility="collapsed")
+    limit = limit_col.selectbox("Darab", [1, 2, 3, 4, 5, 6], index=2, label_visibility="collapsed")
+    if refresh_col.button("Új javaslatok", use_container_width=True):
+        st.rerun()
+    st.write("")
 
     if mode == "Leves + főétel":
         combos = recommend_meal_combinations(limit=max(1, min(limit, 6)))
@@ -94,25 +150,11 @@ def render_recommendation_page():
             st.info("Nincs elég leves/főétel recept a kombinációhoz.")
             return
 
-        st.metric("Kombinációk", len(combos))
-        for idx, combo in enumerate(combos, start=1):
-            soup_recipe = combo["soup"]["recipe"]
-            main_recipe = combo["main"]["recipe"]
-            meal_group_id = f"combo-{date.today().isoformat()}-{idx}"
-            with st.container(border=True):
-                st.markdown(f"### #{idx} kombináció")
-                left, right = st.columns(2)
-                with left:
-                    st.markdown(f"**Leves:** {soup_recipe['name']}")
-                    st.caption(f"{soup_recipe['prep_time_minutes']} perc")
-                    _tag_chips(soup_recipe["tags"])
-                with right:
-                    st.markdown(f"**Főétel:** {main_recipe['name']}")
-                    st.caption(f"{main_recipe['prep_time_minutes']} perc")
-                    _tag_chips(main_recipe["tags"])
-
-                st.caption("Ajánlás oka: " + " | ".join(combo["reasons"]))
-                _save_combo_history_form(soup_recipe, main_recipe, f"combo_{idx}", meal_group_id=meal_group_id)
+        for start in range(0, len(combos), 3):
+            cols = st.columns(3)
+            for offset, combo in enumerate(combos[start : start + 3], start=0):
+                with cols[offset]:
+                    _render_combo_card(combo, start + offset + 1)
         return
 
     if mode == "Csak leves":
@@ -127,18 +169,8 @@ def render_recommendation_page():
         st.info("Nincs ajánlható recept. Ellenőrizd a receptlistát vagy a szűrőket.")
         return
 
-    stat1, stat2 = st.columns(2)
-    stat1.metric("Javaslatok", len(recipes))
-    stat2.metric("Aktív kategória", effective_category or "Mind")
-
-    for item in recipes:
-        recipe = item["recipe"]
-        with st.container(border=True):
-            top_col1, top_col2 = st.columns([3, 2])
-            top_col1.markdown(f"### {recipe['name']}")
-            top_col2.caption(f"Kategória: {recipe['category']} | Idő: {recipe['prep_time_minutes']} perc")
-            _tag_chips(recipe["tags"])
-            if item["reasons"]:
-                st.caption("Ajánlás oka: " + " | ".join(item["reasons"]))
-            st.write(recipe["ingredients_text"] or "-")
-            _save_history_form(recipe, "single")
+    for start in range(0, len(recipes), 3):
+        cols = st.columns(3)
+        for offset, item in enumerate(recipes[start : start + 3], start=0):
+            with cols[offset]:
+                _render_single_card(item, start + offset + 1)
