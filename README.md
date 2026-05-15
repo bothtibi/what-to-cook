@@ -34,6 +34,11 @@ Ellenkezo esetben automatikusan a lokalis SQLite fallback (`DB_PATH`) marad akti
 - `src/db.py` - SQLite kapcsolat es tabla init
 - `src/recipes.py` - recipe CRUD + kereses
 - `src/history.py` - history mentes/listazas
-- `src/recommendations.py` - MVP ajanlo scoring
+- `src/recommendation_algorithm.py` - ajanlo pontozasi algoritmus
+- `src/recommendations.py` - ajanlo lekerdezesek es kombinaciok
 - `src/backup.py` - JSON export/import
 - `src/ui/*` - Streamlit oldalak
+
+## Dokumentacio
+
+- `docs/recommendation_algorithm.md` - ajanlo algoritmus mukodese es finomitasi pontok
