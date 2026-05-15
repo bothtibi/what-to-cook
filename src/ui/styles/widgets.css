@@ -49,6 +49,14 @@ textarea,
     border-color: #e5e7eb;
 }
 
+.stNumberInput {
+    min-width: 6.5rem;
+}
+
+.stNumberInput > div {
+    overflow: visible;
+}
+
 .stNumberInput button {
     color: #5b35d5 !important;
     background: #ffffff !important;

@@ -360,7 +360,7 @@ def render_recommendation_page():
         ).strip(),
         unsafe_allow_html=True,
     )
-    mode_area, count_area, prep_time_area, refresh_area = st.columns([4.2, 0.85, 1.15, 1.2], vertical_alignment="bottom")
+    mode_area, count_area, prep_time_area, refresh_area = st.columns([3.3, 1.25, 2.1, 1.25], vertical_alignment="bottom")
     with mode_area:
         mode = _render_mode_picker()
     with count_area:
