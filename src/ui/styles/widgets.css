@@ -49,6 +49,25 @@ textarea,
     border-color: #e5e7eb;
 }
 
+.stNumberInput button {
+    color: #5b35d5 !important;
+    background: #ffffff !important;
+    border-color: #ddd6fe !important;
+    opacity: 1 !important;
+}
+
+.stNumberInput button svg {
+    color: #5b35d5 !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
+    opacity: 1 !important;
+}
+
+.stNumberInput button:hover {
+    background: #f4f3ff !important;
+    border-color: #7c5ce8 !important;
+}
+
 div[role="radiogroup"] {
     gap: 0.35rem;
 }
