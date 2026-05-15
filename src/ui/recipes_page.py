@@ -124,7 +124,7 @@ def _preference_badges(recipe):
 
 
 def _recipe_form(defaults, form_key, submit_label):
-    with st.form(form_key):
+    with st.form(form_key, enter_to_submit=False):
         st.markdown(f"##### {t('recipes.form.basic')}")
         top_left, top_right = st.columns([2, 1])
         with top_left:

@@ -83,6 +83,11 @@ div[role="radiogroup"] label {
     border-radius: 6px;
 }
 
+[data-testid="InputInstructions"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
 [data-testid="stDialog"] {
     align-items: center;
 }
@@ -90,12 +95,4 @@ div[role="radiogroup"] label {
 [data-testid="stDialog"] > div {
     margin-top: auto;
     margin-bottom: auto;
-}
-
-[data-testid="stDialog"] button[aria-label="Close"],
-[data-testid="stDialog"] button[title="Close"],
-[data-testid="stDialog"] button[kind="header"] {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
 }

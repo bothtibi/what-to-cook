@@ -103,7 +103,7 @@ def _render_manual_add():
         selected_type = st.selectbox(t("history.add_type"), list(add_type_options.keys()))
         add_type = add_type_options[selected_type]
 
-        with st.form("manual_history_add"):
+        with st.form("manual_history_add", enter_to_submit=False):
             cooked_date = st.date_input(t("history.cooked_date"), value=date.today())
 
             if add_type == "combo":
@@ -212,7 +212,7 @@ def _render_entry_card(item):
 
 def _render_entry_action_fields(item, suffix=""):
     action_key = f"history_action_{item['id']}_{suffix}"
-    with st.form(f"edit_history_{item['id']}_{suffix}"):
+    with st.form(f"edit_history_{item['id']}_{suffix}", enter_to_submit=False):
         cooked_date = st.date_input(
             t("history.cooked_date"),
             value=_parse_history_date(item["cooked_date"]),

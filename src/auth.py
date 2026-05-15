@@ -12,7 +12,7 @@ def login_form():
     st.title(t("auth.title"))
     st.write(t("auth.subtitle"))
 
-    with st.form("login_form"):
+    with st.form("login_form", enter_to_submit=False):
         username = st.text_input(t("auth.username"))
         password = st.text_input(t("auth.password"), type="password")
         submitted = st.form_submit_button(t("auth.submit"))

@@ -81,7 +81,7 @@ def _recipe_line(recipe, recent_data):
 
 
 def _save_history_form(recipe, form_key_prefix, meal_group_id=""):
-    with st.form(f"{form_key_prefix}_{recipe['id']}"):
+    with st.form(f"{form_key_prefix}_{recipe['id']}", enter_to_submit=False):
         cooked_date = st.date_input(t("recommendations.cooked_date"), value=date.today(), key=f"date_{form_key_prefix}_{recipe['id']}")
         days_planned = st.number_input(
             t("recommendations.days"),
@@ -107,7 +107,7 @@ def _save_history_form(recipe, form_key_prefix, meal_group_id=""):
 
 
 def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_group_id):
-    with st.form(form_key_prefix):
+    with st.form(form_key_prefix, enter_to_submit=False):
         cooked_date = st.date_input(t("recommendations.cooked_date"), value=date.today(), key=f"date_{form_key_prefix}")
         soup_col, main_col = st.columns(2)
         soup_days = soup_col.number_input(
@@ -261,7 +261,7 @@ def _render_combo_card(combo, idx, recent_data):
             ).strip(),
             unsafe_allow_html=True,
         )
-        cook_col, _ = st.columns([1.25, 1])
+        _, cook_col, _ = st.columns([0.7, 1.35, 0.7])
         if cook_col.button(t("recommendations.save"), key=f"cook_combo_{idx}_{soup_recipe['id']}_{main_recipe['id']}", type="primary", use_container_width=True):
             _open_combo_cook_modal(soup_recipe, main_recipe, idx)
     detail_cols = st.columns(2)
@@ -289,7 +289,7 @@ def _render_single_card(item, idx, recent_data):
             ).strip(),
             unsafe_allow_html=True,
         )
-        cook_col, _ = st.columns([1.25, 1])
+        _, cook_col, _ = st.columns([0.7, 1.35, 0.7])
         if cook_col.button(t("recommendations.save"), key=f"cook_single_{idx}_{recipe['id']}", type="primary", use_container_width=True):
             _open_single_cook_modal(recipe, idx)
     if st.button(t("common.details"), key=f"preview_single_{idx}_{recipe['id']}", use_container_width=True):
