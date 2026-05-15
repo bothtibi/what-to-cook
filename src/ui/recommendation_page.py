@@ -319,22 +319,20 @@ def _render_mode_picker():
 
 
 def _render_count_picker():
+    if not isinstance(st.session_state.get("recommendation_limit"), int):
+        st.session_state["recommendation_limit"] = 3
     if st.session_state.get("recommendation_limit") not in range(1, 7):
         st.session_state["recommendation_limit"] = 3
 
     return int(
-        st.number_input(
-            t("recommendations.count"),
-            min_value=1,
-            max_value=6,
-            step=1,
-            key="recommendation_limit",
-        )
+        st.number_input(t("recommendations.count"), min_value=1, max_value=6, step=1, key="recommendation_limit")
     )
 
 
 def _render_max_prep_time_picker():
-    if "recommendation_max_prep_time" not in st.session_state:
+    if not isinstance(st.session_state.get("recommendation_max_prep_time"), int):
+        st.session_state["recommendation_max_prep_time"] = 90
+    if st.session_state.get("recommendation_max_prep_time") not in range(0, 501):
         st.session_state["recommendation_max_prep_time"] = 90
 
     return int(
@@ -360,7 +358,7 @@ def render_recommendation_page():
         ).strip(),
         unsafe_allow_html=True,
     )
-    mode_area, count_area, prep_time_area, refresh_area = st.columns([3.3, 1.25, 2.1, 1.25], vertical_alignment="bottom")
+    mode_area, count_area, prep_time_area, refresh_area = st.columns([3.25, 1.45, 2.35, 1.35], vertical_alignment="bottom")
     with mode_area:
         mode = _render_mode_picker()
     with count_area:
