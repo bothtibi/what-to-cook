@@ -44,7 +44,7 @@
   "recommendations.mode_single": "Any recipe",
   "recommendations.category": "Category",
   "recommendations.count": "Count",
-  "recommendations.max_prep_time": "Max min",
+  "recommendations.max_prep_time": "Max cooking time (min)",
   "recommendations.refresh": "New suggestions",
   "recommendations.no_combo": "There are not enough soup/main recipes for combinations.",
   "recommendations.no_recipes": "No recipes can be suggested. Check the recipe list or filters.",

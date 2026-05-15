@@ -1,0 +1,101 @@
+.stApp {
+    background: #f6f7fb;
+    color: #101828;
+}
+
+.block-container {
+    max-width: 1180px;
+    padding-top: 1.2rem;
+    padding-bottom: 3rem;
+}
+
+h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: #101828;
+}
+
+h2,
+h3 {
+    color: #101828;
+    letter-spacing: 0;
+}
+
+[data-testid="stHeader"] {
+    background: rgba(246, 247, 251, 0.9);
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: #e7e9f0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(16, 24, 40, 0.05);
+}
+
+div[data-testid="stMetricValue"] {
+    color: #101828;
+    font-size: 1.5rem;
+}
+
+div[data-testid="stMetricLabel"] {
+    color: #6b7280;
+}
+
+.page-panel {
+    background: #ffffff;
+    border: 1px solid #e7e9f0;
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 12px 34px rgba(16, 24, 40, 0.06);
+    margin-bottom: 1rem;
+}
+
+.section-kicker {
+    color: #667085;
+    font-size: 0.85rem;
+    margin-top: -0.35rem;
+    margin-bottom: 1rem;
+}
+
+.category-pill {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.12rem 0.48rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin-right: 0.25rem;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.category-leves {
+    background: #ecfdf3;
+    color: #027a48;
+    border-color: #abefc6;
+}
+
+.category-foetel {
+    background: #fff4ed;
+    color: #c4320a;
+    border-color: #ffd6ae;
+}
+
+.category-reggeli {
+    background: #eff8ff;
+    color: #175cd3;
+    border-color: #b2ddff;
+}
+
+.category-vacsora {
+    background: #f4f3ff;
+    color: #5925dc;
+    border-color: #d9d6fe;
+}
+
+.category-other {
+    background: #f2f4f7;
+    color: #344054;
+    border-color: #e4e7ec;
+}

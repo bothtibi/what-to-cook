@@ -1,0 +1,58 @@
+.history-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.15rem 0 0.7rem 0;
+    border-bottom: 1px solid #eef0f4;
+    margin-bottom: 0.65rem;
+}
+
+.history-day {
+    font-weight: 800;
+    color: #101828;
+    font-size: 1rem;
+}
+
+.history-day-sub {
+    color: #667085;
+    font-size: 0.8rem;
+    margin-top: 0.12rem;
+}
+
+.history-entry {
+    border: 1px solid #e7e9f0;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 0.7rem 0.8rem;
+    margin: 0.5rem 0;
+}
+
+.history-combo {
+    background: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+    border-color: #ddd6fe;
+}
+
+.history-title {
+    color: #101828;
+    font-weight: 750;
+    margin-bottom: 0.35rem;
+}
+
+.history-meta {
+    color: #667085;
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+.combo-pill {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.12rem 0.48rem;
+    margin-right: 0.35rem;
+    background: #f4f3ff;
+    color: #5925dc;
+    border: 1px solid #d9d6fe;
+    font-size: 0.72rem;
+    font-weight: 800;
+    vertical-align: 1px;
+}

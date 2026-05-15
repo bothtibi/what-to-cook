@@ -1,0 +1,49 @@
+.recommend-card {
+    border: 1px solid #e7e9f0;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 0.9rem;
+    box-shadow: 0 8px 26px rgba(16, 24, 40, 0.05);
+    position: relative;
+}
+
+.recommend-card-single {
+    min-height: 150px;
+}
+
+.recommend-card-combo {
+    min-height: 310px;
+}
+
+.rank-badge {
+    position: absolute;
+    top: -0.65rem;
+    left: 0.75rem;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    background: #7c5ce8;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.combo-plus {
+    color: #101828;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.35rem;
+    line-height: 1;
+    margin: 0.15rem 0;
+}
+
+.card-note {
+    color: #667085;
+    font-size: 0.82rem;
+    text-align: center;
+    margin-top: 0.65rem;
+    min-height: 1.2rem;
+}

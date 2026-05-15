@@ -101,7 +101,8 @@ def _save_history_form(recipe, form_key_prefix, meal_group_id=""):
             meal_group_id=meal_group_id.strip(),
             notes="",
         )
-        st.success(t("recommendations.saved"))
+        st.session_state.pop("cook_modal", None)
+        st.session_state["recommendation_notice"] = t("recommendations.saved")
         st.rerun()
 
 
@@ -138,8 +139,76 @@ def _save_combo_history_form(soup_recipe, main_recipe, form_key_prefix, meal_gro
                 {"recipe_id": main_recipe["id"], "days_planned": int(main_days), **common},
             ]
         )
-        st.success(t("recommendations.combo_saved"))
+        st.session_state.pop("cook_modal", None)
+        st.session_state["recommendation_notice"] = t("recommendations.combo_saved")
         st.rerun()
+
+
+def _open_single_cook_modal(recipe, idx):
+    st.session_state["cook_modal"] = {
+        "type": "single",
+        "recipe_id": recipe["id"],
+        "key": f"single_{idx}_{recipe['id']}",
+    }
+    st.rerun()
+
+
+def _open_combo_cook_modal(soup_recipe, main_recipe, idx):
+    st.session_state["cook_modal"] = {
+        "type": "combo",
+        "soup_id": soup_recipe["id"],
+        "main_id": main_recipe["id"],
+        "meal_group_id": f"combo-{date.today().isoformat()}-{idx}",
+        "key": f"combo_{idx}_{soup_recipe['id']}_{main_recipe['id']}",
+    }
+    st.rerun()
+
+
+def _render_cook_modal_content(payload):
+    if st.button(t("common.close"), key=f"close_cook_modal_{payload['key']}"):
+        st.session_state.pop("cook_modal", None)
+        st.rerun()
+
+    if payload["type"] == "combo":
+        soup_recipe = get_recipe(payload["soup_id"])
+        main_recipe = get_recipe(payload["main_id"])
+        if not soup_recipe or not main_recipe:
+            st.warning(t("recommendations.no_recipes"))
+            return
+
+        st.markdown(f"**{soup_recipe['name']} + {main_recipe['name']}**")
+        _save_combo_history_form(
+            soup_recipe,
+            main_recipe,
+            f"cook_modal_{payload['key']}",
+            meal_group_id=payload["meal_group_id"],
+        )
+        return
+
+    recipe = get_recipe(payload["recipe_id"])
+    if not recipe:
+        st.warning(t("recommendations.no_recipes"))
+        return
+
+    st.markdown(f"**{recipe['name']}**")
+    _save_history_form(recipe, f"cook_modal_{payload['key']}")
+
+
+def _render_cook_modal():
+    payload = st.session_state.get("cook_modal")
+    if not payload:
+        return
+
+    if hasattr(st, "dialog"):
+        @st.dialog(t("recommendations.save"))
+        def _dialog():
+            _render_cook_modal_content(payload)
+
+        _dialog()
+    else:
+        with st.container(border=True):
+            st.markdown(f"### {t('recommendations.save')}")
+            _render_cook_modal_content(payload)
 
 
 def _render_preview_content(recipe):
@@ -197,11 +266,13 @@ def _render_combo_card(combo, idx, recent_data):
     )
     detail_cols = st.columns(2)
     if detail_cols[0].button(t("recommendations.soup_details"), key=f"preview_soup_{idx}", use_container_width=True):
+        st.session_state.pop("cook_modal", None)
         preview_id = soup_recipe["id"]
     if detail_cols[1].button(t("recommendations.main_details"), key=f"preview_main_{idx}", use_container_width=True):
+        st.session_state.pop("cook_modal", None)
         preview_id = main_recipe["id"]
-    meal_group_id = f"combo-{date.today().isoformat()}-{idx}"
-    _save_combo_history_form(soup_recipe, main_recipe, f"combo_{idx}", meal_group_id=meal_group_id)
+    if st.button(t("recommendations.save"), key=f"cook_combo_{idx}_{soup_recipe['id']}_{main_recipe['id']}", type="primary", use_container_width=True):
+        _open_combo_cook_modal(soup_recipe, main_recipe, idx)
     return preview_id
 
 
@@ -219,9 +290,12 @@ def _render_single_card(item, idx, recent_data):
         ).strip(),
         unsafe_allow_html=True,
     )
-    if st.button(t("common.details"), key=f"preview_single_{idx}_{recipe['id']}", use_container_width=True):
+    action_cols = st.columns(2)
+    if action_cols[0].button(t("common.details"), key=f"preview_single_{idx}_{recipe['id']}", use_container_width=True):
+        st.session_state.pop("cook_modal", None)
         preview_id = recipe["id"]
-    _save_history_form(recipe, f"single_{idx}")
+    if action_cols[1].button(t("recommendations.save"), key=f"cook_single_{idx}_{recipe['id']}", type="primary", use_container_width=True):
+        _open_single_cook_modal(recipe, idx)
     return preview_id
 
 
@@ -267,9 +341,9 @@ def _render_max_prep_time_picker():
     return int(
         st.number_input(
             t("recommendations.max_prep_time"),
-            min_value=10,
-            max_value=240,
-            step=5,
+            min_value=0,
+            max_value=500,
+            step=10,
             key="recommendation_max_prep_time",
         )
     )
@@ -298,6 +372,8 @@ def render_recommendation_page():
         refresh_clicked = st.button(t("recommendations.refresh"), use_container_width=True)
     if refresh_clicked:
         st.rerun()
+    if st.session_state.get("recommendation_notice"):
+        st.success(st.session_state.pop("recommendation_notice"))
     st.write("")
     recent_data = recent_cooked_dates_by_recipe()
 
@@ -315,6 +391,7 @@ def render_recommendation_page():
                     clicked_preview_id = _render_combo_card(combo, start + offset + 1, recent_data)
                     preview_id = clicked_preview_id or preview_id
         _render_recipe_preview(preview_id)
+        _render_cook_modal()
         return
 
     if mode == "soup":
@@ -337,3 +414,4 @@ def render_recommendation_page():
                 clicked_preview_id = _render_single_card(item, start + offset + 1, recent_data)
                 preview_id = clicked_preview_id or preview_id
     _render_recipe_preview(preview_id)
+    _render_cook_modal()

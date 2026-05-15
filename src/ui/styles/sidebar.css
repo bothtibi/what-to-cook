@@ -1,0 +1,60 @@
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #121c2b 0%, #172435 100%);
+    border-right: 1px solid #0f172a;
+    min-width: 13.5rem;
+    max-width: 13.5rem;
+    width: 13.5rem;
+    display: block;
+    visibility: visible;
+}
+
+[data-testid="stSidebar"] * {
+    color: #f8fafc;
+}
+
+[data-testid="stSidebar"] > div {
+    padding-top: 1rem;
+    width: 13.5rem;
+}
+
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapseButton"],
+button[aria-label="Close sidebar"],
+button[aria-label="Open sidebar"],
+button[title="Close sidebar"],
+button[title="Open sidebar"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+[data-testid="stSidebar"] h1 {
+    color: #ffffff;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+[data-testid="stSidebar"] .stButton > button {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    width: 100%;
+    margin-top: 0.25rem;
+    justify-content: flex-start;
+    font-weight: 700;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.32);
+    color: #ffffff;
+}
+
+[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+    background: linear-gradient(180deg, #8b6df0 0%, #6d4bdc 100%);
+    border-color: rgba(255, 255, 255, 0.24);
+    box-shadow: 0 8px 18px rgba(91, 53, 213, 0.35);
+    color: #ffffff;
+}

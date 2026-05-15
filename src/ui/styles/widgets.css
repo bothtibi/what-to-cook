@@ -1,0 +1,74 @@
+.stButton > button {
+    border-radius: 8px;
+    border: 1px solid #ddd6fe;
+    background: #ffffff;
+    color: #5b35d5;
+    box-shadow: none;
+    font-weight: 600;
+}
+
+.stButton > button:hover {
+    border-color: #7c5ce8;
+    color: #4f2fc3;
+}
+
+.stButton > button[kind="primary"] {
+    border-color: #6d4bdc;
+    background: linear-gradient(180deg, #8b6df0 0%, #6d4bdc 100%);
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(91, 53, 213, 0.22);
+}
+
+.stButton > button[kind="primary"]:hover {
+    border-color: #5638c8;
+    background: #5638c8;
+    color: #ffffff;
+}
+
+.stDownloadButton > button,
+.stFormSubmitButton > button {
+    border-radius: 8px;
+    border: 1px solid #6d4bdc;
+    background: linear-gradient(180deg, #7c5ce8 0%, #6042d0 100%);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.stDownloadButton > button:hover,
+.stFormSubmitButton > button:hover {
+    border-color: #5638c8;
+    background: #5638c8;
+    color: #ffffff;
+}
+
+.stTextInput input,
+.stNumberInput input,
+textarea,
+[data-baseweb="select"] > div {
+    border-radius: 8px;
+    border-color: #e5e7eb;
+}
+
+div[role="radiogroup"] {
+    gap: 0.35rem;
+}
+
+div[role="radiogroup"] label {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.35rem 0.65rem;
+}
+
+[data-baseweb="tag"] {
+    border-radius: 6px;
+}
+
+[data-testid="stDialog"] {
+    align-items: center;
+}
+
+[data-testid="stDialog"] > div {
+    margin-top: auto;
+    margin-bottom: auto;
+}
