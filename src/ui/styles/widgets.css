@@ -49,19 +49,8 @@ textarea,
     border-color: #e5e7eb;
 }
 
-.stNumberInput {
-    min-width: 0;
-}
-
 .stNumberInput > div {
     overflow: visible;
-}
-
-.stNumberInput input {
-    min-width: 2.2rem !important;
-    padding-left: 0.35rem !important;
-    padding-right: 0.35rem !important;
-    text-align: center;
 }
 
 .stNumberInput button {
