@@ -261,16 +261,16 @@ def _render_combo_card(combo, idx, recent_data):
             ).strip(),
             unsafe_allow_html=True,
         )
-        detail_cols = st.columns(2)
-        if detail_cols[0].button(t("recommendations.soup_details"), key=f"preview_soup_{idx}", use_container_width=True):
-            st.session_state.pop("cook_modal", None)
-            preview_id = soup_recipe["id"]
-        if detail_cols[1].button(t("recommendations.main_details"), key=f"preview_main_{idx}", use_container_width=True):
-            st.session_state.pop("cook_modal", None)
-            preview_id = main_recipe["id"]
         cook_col, _ = st.columns([1.25, 1])
         if cook_col.button(t("recommendations.save"), key=f"cook_combo_{idx}_{soup_recipe['id']}_{main_recipe['id']}", type="primary", use_container_width=True):
             _open_combo_cook_modal(soup_recipe, main_recipe, idx)
+    detail_cols = st.columns(2)
+    if detail_cols[0].button(t("recommendations.soup_details"), key=f"preview_soup_{idx}", use_container_width=True):
+        st.session_state.pop("cook_modal", None)
+        preview_id = soup_recipe["id"]
+    if detail_cols[1].button(t("recommendations.main_details"), key=f"preview_main_{idx}", use_container_width=True):
+        st.session_state.pop("cook_modal", None)
+        preview_id = main_recipe["id"]
     return preview_id
 
 
@@ -289,12 +289,12 @@ def _render_single_card(item, idx, recent_data):
             ).strip(),
             unsafe_allow_html=True,
         )
-        action_cols = st.columns([1, 1.25])
-        if action_cols[0].button(t("common.details"), key=f"preview_single_{idx}_{recipe['id']}", use_container_width=True):
-            st.session_state.pop("cook_modal", None)
-            preview_id = recipe["id"]
-        if action_cols[1].button(t("recommendations.save"), key=f"cook_single_{idx}_{recipe['id']}", type="primary", use_container_width=True):
+        cook_col, _ = st.columns([1.25, 1])
+        if cook_col.button(t("recommendations.save"), key=f"cook_single_{idx}_{recipe['id']}", type="primary", use_container_width=True):
             _open_single_cook_modal(recipe, idx)
+    if st.button(t("common.details"), key=f"preview_single_{idx}_{recipe['id']}", use_container_width=True):
+        st.session_state.pop("cook_modal", None)
+        preview_id = recipe["id"]
     return preview_id
 
 

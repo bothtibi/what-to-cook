@@ -91,3 +91,11 @@ div[role="radiogroup"] label {
     margin-top: auto;
     margin-bottom: auto;
 }
+
+[data-testid="stDialog"] button[aria-label="Close"],
+[data-testid="stDialog"] button[title="Close"],
+[data-testid="stDialog"] button[kind="header"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
