@@ -44,6 +44,7 @@
   "recommendations.mode_single": "Csak recept",
   "recommendations.category": "Kategória",
   "recommendations.count": "Darab",
+  "recommendations.max_prep_time": "Max perc",
   "recommendations.refresh": "Új javaslatok",
   "recommendations.no_combo": "Nincs elég leves/főétel recept a kombinációhoz.",
   "recommendations.no_recipes": "Nincs ajánlható recept. Ellenőrizd a receptlistát vagy a szűrőket.",

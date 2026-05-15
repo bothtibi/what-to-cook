@@ -256,7 +256,7 @@ def _render_entry_actions(item, suffix=""):
         _render_entry_action_fields(item, suffix)
 
 
-def _render_combo_card(items):
+def _render_combo_card(items, suffix=""):
     recipe_names = " + ".join(html.escape(str(item["recipe_name"])) for item in items)
     badges = " ".join(_category_badge(item["category"]) for item in items)
     day_parts = [
@@ -280,13 +280,14 @@ def _render_combo_card(items):
     with st.expander(t("history.manage_combo")):
         for item in items:
             st.markdown(f"**{html.escape(str(item['recipe_name']))}**")
-            _render_entry_action_fields(item, suffix="combo")
+            _render_entry_action_fields(item, suffix=f"combo_{suffix}")
 
         if items and items[0]["meal_group_id"]:
-            confirm_delete = st.checkbox(t("history.delete_combo_confirm"), key=f"confirm_delete_combo_{items[0]['meal_group_id']}")
+            group_key = f"{items[0]['meal_group_id']}_{suffix}"
+            confirm_delete = st.checkbox(t("history.delete_combo_confirm"), key=f"confirm_delete_combo_{group_key}")
             if st.button(
                 t("history.delete_combo"),
-                key=f"delete_combo_{items[0]['meal_group_id']}",
+                key=f"delete_combo_{group_key}",
                 disabled=not confirm_delete,
             ):
                 delete_history_group(items[0]["meal_group_id"])
@@ -332,7 +333,8 @@ def _render_day(day, items):
 
     for kind, payload in _split_grouped_items(items):
         if kind == "combo":
-            _render_combo_card(payload)
+            group_id = payload[0]["meal_group_id"] if payload else "combo"
+            _render_combo_card(payload, suffix=f"timeline_{day}_{group_id}")
         else:
             _render_entry_card(payload)
             _render_entry_actions(payload, suffix="timeline")

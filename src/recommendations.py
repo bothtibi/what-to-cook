@@ -81,12 +81,21 @@ def score_recipe(recipe, recent_data):
     return {"score": score, "reasons": reasons}
 
 
-def recommend_recipes(category="", limit=5):
+def _matches_max_prep_time(recipe, max_prep_time):
+    if not max_prep_time:
+        return True
+    prep_time = int(recipe.get("prep_time_minutes", 0) or 0)
+    return prep_time == 0 or prep_time <= int(max_prep_time)
+
+
+def recommend_recipes(category="", limit=5, max_prep_time=90):
     recipes = list_recipes(category=category, include_disliked=False)
     recent_data = recent_cooked_dates_by_recipe()
 
     scored = []
     for recipe in recipes:
+        if not _matches_max_prep_time(recipe, max_prep_time):
+            continue
         result = score_recipe(recipe, recent_data)
         if result is not None:
             scored.append((result["score"], recipe, result["reasons"]))
@@ -98,9 +107,9 @@ def recommend_recipes(category="", limit=5):
     ]
 
 
-def recommend_meal_combinations(limit=3):
-    soups = recommend_recipes(category="Leves", limit=max(limit * 2, 4))
-    mains = recommend_recipes(category="Főétel", limit=max(limit * 2, 4))
+def recommend_meal_combinations(limit=3, max_prep_time=90):
+    soups = recommend_recipes(category="Leves", limit=max(limit * 2, 4), max_prep_time=max_prep_time)
+    mains = recommend_recipes(category="Főétel", limit=max(limit * 2, 4), max_prep_time=max_prep_time)
 
     if not soups or not mains:
         return []

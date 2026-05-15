@@ -260,6 +260,21 @@ def _render_count_picker():
     )
 
 
+def _render_max_prep_time_picker():
+    if "recommendation_max_prep_time" not in st.session_state:
+        st.session_state["recommendation_max_prep_time"] = 90
+
+    return int(
+        st.number_input(
+            t("recommendations.max_prep_time"),
+            min_value=10,
+            max_value=240,
+            step=5,
+            key="recommendation_max_prep_time",
+        )
+    )
+
+
 def render_recommendation_page():
     st.markdown(
         dedent(
@@ -272,11 +287,13 @@ def render_recommendation_page():
         ).strip(),
         unsafe_allow_html=True,
     )
-    mode_area, count_area, refresh_area = st.columns([4.2, 0.9, 1.2], vertical_alignment="bottom")
+    mode_area, count_area, prep_time_area, refresh_area = st.columns([4.2, 0.85, 1.15, 1.2], vertical_alignment="bottom")
     with mode_area:
         mode = _render_mode_picker()
     with count_area:
         limit = _render_count_picker()
+    with prep_time_area:
+        max_prep_time = _render_max_prep_time_picker()
     with refresh_area:
         refresh_clicked = st.button(t("recommendations.refresh"), use_container_width=True)
     if refresh_clicked:
@@ -285,7 +302,7 @@ def render_recommendation_page():
     recent_data = recent_cooked_dates_by_recipe()
 
     if mode == "combo":
-        combos = recommend_meal_combinations(limit=max(1, min(limit, 6)))
+        combos = recommend_meal_combinations(limit=max(1, min(limit, 6)), max_prep_time=max_prep_time)
         if not combos:
             st.info(t("recommendations.no_combo"))
             return
@@ -307,7 +324,7 @@ def render_recommendation_page():
     else:
         effective_category = ""
 
-    recipes = recommend_recipes(category=effective_category, limit=limit)
+    recipes = recommend_recipes(category=effective_category, limit=limit, max_prep_time=max_prep_time)
     if not recipes:
         st.info(t("recommendations.no_recipes"))
         return
