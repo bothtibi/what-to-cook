@@ -298,7 +298,7 @@ def _render_single_card(item, idx, recent_data):
     return preview_id
 
 
-def _render_mode_picker():
+def _render_mode_picker(show_label=True):
     mode_options = [
         ("combo", t("recommendations.mode_combo")),
         ("soup", t("recommendations.mode_soup")),
@@ -308,7 +308,8 @@ def _render_mode_picker():
     if st.session_state.get("recommendation_mode") not in {key for key, _ in mode_options}:
         st.session_state["recommendation_mode"] = "combo"
 
-    st.caption(t("recommendations.mode"))
+    if show_label:
+        st.caption(t("recommendations.mode"))
     cols = st.columns(len(mode_options))
     for col, (mode_key, label) in zip(cols, mode_options):
         active = st.session_state["recommendation_mode"] == mode_key
@@ -331,6 +332,7 @@ def _render_count_picker():
             max_value=6,
             step=1,
             key="recommendation_limit",
+            label_visibility="collapsed",
         )
     )
 
@@ -348,6 +350,7 @@ def _render_max_prep_time_picker():
             max_value=500,
             step=10,
             key="recommendation_max_prep_time",
+            label_visibility="collapsed",
         )
     )
 
@@ -364,9 +367,15 @@ def render_recommendation_page():
         ).strip(),
         unsafe_allow_html=True,
     )
-    mode_area, count_area, prep_time_area, refresh_area = st.columns([4.5, 1.35, 2.1, 1.3], vertical_alignment="bottom")
+    label_mode, label_count, label_prep_time, label_refresh = st.columns([4.5, 1.35, 2.1, 1.3])
+    label_mode.caption(t("recommendations.mode"))
+    label_count.caption(t("recommendations.count"))
+    label_prep_time.caption(t("recommendations.max_prep_time"))
+    label_refresh.caption("")
+
+    mode_area, count_area, prep_time_area, refresh_area = st.columns([4.5, 1.35, 2.1, 1.3], vertical_alignment="top")
     with mode_area:
-        mode = _render_mode_picker()
+        mode = _render_mode_picker(show_label=False)
     with count_area:
         limit = _render_count_picker()
     with prep_time_area:
