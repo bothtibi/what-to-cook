@@ -1,10 +1,15 @@
 import sqlite3
+from threading import Lock
 from pathlib import Path
 from urllib.parse import urlparse
 
 from src.config import get_database_path, get_turso_auth_token, get_turso_database_url
 
 _libsql_module = None
+_turso_conn = None
+_turso_lock = Lock()
+_db_initialized = False
+_init_lock = Lock()
 
 
 class TursoConnectionError(RuntimeError):
@@ -59,37 +64,52 @@ def _raise_turso_error(error):
 
 
 def _turso_connection():
+    global _turso_conn
+    if _turso_conn is not None:
+        return _turso_conn
+
     url = get_turso_database_url()
     token = get_turso_auth_token()
     libsql = _get_libsql_module()
     try:
-        return libsql.connect(database=url, auth_token=token)
+        _turso_conn = libsql.connect(database=url, auth_token=token)
+        return _turso_conn
     except Exception as error:
         _raise_turso_error(error)
 
 
 def _execute_turso(sql, params=()):
-    conn = _turso_connection()
-    try:
-        conn.execute(sql, params)
-        conn.commit()
-    except Exception as error:
-        _raise_turso_error(error)
-    finally:
-        conn.close()
+    with _turso_lock:
+        conn = _turso_connection()
+        try:
+            conn.execute(sql, params)
+            conn.commit()
+        except Exception as error:
+            _reset_turso_connection()
+            _raise_turso_error(error)
 
 
 def _fetchall_turso(sql, params=()):
-    conn = _turso_connection()
-    try:
-        cursor = conn.execute(sql, params)
-        rows = cursor.fetchall()
-        columns = [column[0] for column in cursor.description or []]
-        return [_row_to_dict(row, columns) for row in rows]
-    except Exception as error:
-        _raise_turso_error(error)
-    finally:
-        conn.close()
+    with _turso_lock:
+        conn = _turso_connection()
+        try:
+            cursor = conn.execute(sql, params)
+            rows = cursor.fetchall()
+            columns = [column[0] for column in cursor.description or []]
+            return [_row_to_dict(row, columns) for row in rows]
+        except Exception as error:
+            _reset_turso_connection()
+            _raise_turso_error(error)
+
+
+def _reset_turso_connection():
+    global _turso_conn
+    if _turso_conn is not None:
+        try:
+            _turso_conn.close()
+        except Exception:
+            pass
+    _turso_conn = None
 
 
 def _row_to_dict(row, columns=None):
@@ -140,22 +160,22 @@ def execute_transaction(statements):
         return
 
     if _use_turso():
-        conn = _turso_connection()
-        try:
-            conn.execute("BEGIN")
+        with _turso_lock:
+            conn = _turso_connection()
             try:
-                for sql, params in statements:
-                    conn.execute(sql, params)
-                conn.execute("COMMIT")
-            except Exception:
-                conn.execute("ROLLBACK")
-                raise
-        except Exception as error:
-            if isinstance(error, TursoConnectionError):
-                raise
-            _raise_turso_error(error)
-        finally:
-            conn.close()
+                conn.execute("BEGIN")
+                try:
+                    for sql, params in statements:
+                        conn.execute(sql, params)
+                    conn.execute("COMMIT")
+                except Exception:
+                    conn.execute("ROLLBACK")
+                    raise
+            except Exception as error:
+                _reset_turso_connection()
+                if isinstance(error, TursoConnectionError):
+                    raise
+                _raise_turso_error(error)
         return
 
     conn = _sqlite_connection()
@@ -172,6 +192,19 @@ def get_active_backend_name():
 
 
 def init_db():
+    global _db_initialized
+    if _db_initialized:
+        return
+
+    with _init_lock:
+        if _db_initialized:
+            return
+
+        _init_db()
+        _db_initialized = True
+
+
+def _init_db():
     execute(
         """
         CREATE TABLE IF NOT EXISTS recipes (
