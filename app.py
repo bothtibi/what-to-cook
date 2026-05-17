@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src.auth import is_authenticated, login_form, logout
-from src.db import init_db
+from src.db import TursoConnectionError, init_db
 from src.i18n import t
 from src.ui.backup_page import render_backup_page
 from src.ui.history_page import render_history_page
@@ -12,7 +12,12 @@ from src.ui.styles import apply_global_styles
 
 
 st.set_page_config(page_title=t("app.page_title"), layout="wide", initial_sidebar_state="expanded")
-init_db()
+try:
+    init_db()
+except TursoConnectionError as error:
+    st.error(str(error))
+    st.info("Open Streamlit Cloud secrets and verify TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, then reboot the app.")
+    st.stop()
 apply_global_styles()
 
 if not is_authenticated():

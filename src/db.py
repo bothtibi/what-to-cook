@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from src.config import get_database_path, get_turso_auth_token, get_turso_database_url
 
-_libsql_client = None
+_libsql_module = None
 
 
 class TursoConnectionError(RuntimeError):
@@ -19,22 +19,22 @@ def _sqlite_connection():
     return conn
 
 
-def _get_libsql_client():
-    global _libsql_client
-    if _libsql_client is not None:
-        return _libsql_client
+def _get_libsql_module():
+    global _libsql_module
+    if _libsql_module is not None:
+        return _libsql_module
 
     try:
-        import libsql_client
+        import libsql
     except ImportError:  # pragma: no cover - optional at runtime
         return None
 
-    _libsql_client = libsql_client
-    return _libsql_client
+    _libsql_module = libsql
+    return _libsql_module
 
 
 def _use_turso():
-    return bool(get_turso_database_url() and get_turso_auth_token() and _get_libsql_client() is not None)
+    return bool(get_turso_database_url() and get_turso_auth_token() and _get_libsql_module() is not None)
 
 
 def _safe_turso_host():
@@ -58,15 +58,38 @@ def _raise_turso_error(error):
     ) from error
 
 
-def _execute_turso(sql, params=()):
+def _turso_connection():
     url = get_turso_database_url()
     token = get_turso_auth_token()
-    libsql_client = _get_libsql_client()
+    libsql = _get_libsql_module()
     try:
-        with libsql_client.create_client_sync(url=url, auth_token=token) as client:
-            return client.execute(sql, list(params))
+        return libsql.connect(database=url, auth_token=token)
     except Exception as error:
         _raise_turso_error(error)
+
+
+def _execute_turso(sql, params=()):
+    conn = _turso_connection()
+    try:
+        conn.execute(sql, params)
+        conn.commit()
+    except Exception as error:
+        _raise_turso_error(error)
+    finally:
+        conn.close()
+
+
+def _fetchall_turso(sql, params=()):
+    conn = _turso_connection()
+    try:
+        cursor = conn.execute(sql, params)
+        rows = cursor.fetchall()
+        columns = [column[0] for column in cursor.description or []]
+        return [_row_to_dict(row, columns) for row in rows]
+    except Exception as error:
+        _raise_turso_error(error)
+    finally:
+        conn.close()
 
 
 def _row_to_dict(row, columns=None):
@@ -95,9 +118,7 @@ def execute(sql, params=()):
 
 def fetchall(sql, params=()):
     if _use_turso():
-        result = _execute_turso(sql, params)
-        columns = list(getattr(result, "columns", []))
-        return [_row_to_dict(row, columns) for row in result.rows]
+        return _fetchall_turso(sql, params)
 
     conn = _sqlite_connection()
     rows = conn.execute(sql, params).fetchall()
@@ -119,23 +140,22 @@ def execute_transaction(statements):
         return
 
     if _use_turso():
-        url = get_turso_database_url()
-        token = get_turso_auth_token()
-        libsql_client = _get_libsql_client()
+        conn = _turso_connection()
         try:
-            with libsql_client.create_client_sync(url=url, auth_token=token) as client:
-                client.execute("BEGIN")
-                try:
-                    for sql, params in statements:
-                        client.execute(sql, list(params))
-                    client.execute("COMMIT")
-                except Exception:
-                    client.execute("ROLLBACK")
-                    raise
+            conn.execute("BEGIN")
+            try:
+                for sql, params in statements:
+                    conn.execute(sql, params)
+                conn.execute("COMMIT")
+            except Exception:
+                conn.execute("ROLLBACK")
+                raise
         except Exception as error:
             if isinstance(error, TursoConnectionError):
                 raise
             _raise_turso_error(error)
+        finally:
+            conn.close()
         return
 
     conn = _sqlite_connection()

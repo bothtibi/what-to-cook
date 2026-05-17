@@ -24,7 +24,7 @@ Alapertelmezetten local fallback ertekeket hasznal. Deploymenthez ajanlott:
 - `TURSO_DATABASE_URL` (ha Turso-t hasznalsz)
 - `TURSO_AUTH_TOKEN` (ha Turso-t hasznalsz)
 
-Ha a Turso URL + token be van allitva es a `libsql-client` telepitve van, az app Turso-t hasznal.
+Ha a Turso URL + token be van allitva es a `libsql` telepitve van, az app Turso-t hasznal.
 Ellenkezo esetben automatikusan a lokalis SQLite fallback (`DB_PATH`) marad aktiv.
 
 ## Projekt struktura
