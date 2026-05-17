@@ -1,3 +1,5 @@
+import streamlit as st
+
 from src.db import execute, execute_transaction, fetchall
 
 
@@ -101,6 +103,7 @@ def delete_history_group(meal_group_id):
     execute("DELETE FROM history WHERE meal_group_id = ?", (_clean_history_value(meal_group_id),))
 
 
+@st.cache_data(ttl=60)
 def list_history(start_date=None, end_date=None, query=""):
     sql = """
         SELECT h.*, r.name AS recipe_name, r.category
@@ -124,6 +127,7 @@ def list_history(start_date=None, end_date=None, query=""):
     return fetchall(sql, tuple(params))
 
 
+@st.cache_data(ttl=60)
 def recent_cooked_dates_by_recipe():
     rows = fetchall(
         """

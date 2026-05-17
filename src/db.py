@@ -3,6 +3,8 @@ from threading import Lock
 from pathlib import Path
 from urllib.parse import urlparse
 
+import streamlit as st
+
 from src.config import get_database_path, get_turso_auth_token, get_turso_database_url
 
 _libsql_module = None
@@ -112,6 +114,10 @@ def _reset_turso_connection():
     _turso_conn = None
 
 
+def clear_data_cache():
+    st.cache_data.clear()
+
+
 def _row_to_dict(row, columns=None):
     if isinstance(row, dict):
         return row
@@ -128,12 +134,14 @@ def _row_to_dict(row, columns=None):
 def execute(sql, params=()):
     if _use_turso():
         _execute_turso(sql, params)
+        clear_data_cache()
         return
 
     conn = _sqlite_connection()
     with conn:
         conn.execute(sql, params)
     conn.close()
+    clear_data_cache()
 
 
 def fetchall(sql, params=()):
@@ -176,6 +184,7 @@ def execute_transaction(statements):
                 if isinstance(error, TursoConnectionError):
                     raise
                 _raise_turso_error(error)
+        clear_data_cache()
         return
 
     conn = _sqlite_connection()
@@ -185,6 +194,7 @@ def execute_transaction(statements):
                 conn.execute(sql, params)
     finally:
         conn.close()
+    clear_data_cache()
 
 
 def get_active_backend_name():

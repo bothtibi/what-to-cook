@@ -1,3 +1,5 @@
+import streamlit as st
+
 from src.db import execute, execute_transaction, fetchall, fetchone
 
 
@@ -207,6 +209,7 @@ def set_dislike_melinda(recipe_id, enabled):
     )
 
 
+@st.cache_data(ttl=60)
 def get_recipe(recipe_id):
     return fetchone("SELECT * FROM recipes WHERE id = ? AND is_archived = 0", (recipe_id,))
 
@@ -228,6 +231,7 @@ def delete_recipe(recipe_id):
     )
 
 
+@st.cache_data(ttl=60)
 def list_recipes(query="", category="", tag="", include_disliked=True, include_archived=False):
     sql = "SELECT * FROM recipes WHERE 1=1"
     params = []
