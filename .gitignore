@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local SQLite fallback data
+data/*.db
+data/*.db-*
+
+# Codex local testing artifacts
+.codex-*.png
+.codex-*.log
