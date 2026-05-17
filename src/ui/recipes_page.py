@@ -103,6 +103,36 @@ def _preference_flags(tibi_preference, melinda_preference):
     }
 
 
+def _choice_control(label, options, default, key, format_func):
+    if hasattr(st, "segmented_control"):
+        try:
+            selected = st.segmented_control(
+                label,
+                options,
+                default=default,
+                format_func=format_func,
+                key=key,
+            )
+            return selected or default
+        except TypeError:
+            pass
+
+    return st.selectbox(
+        label,
+        options,
+        index=options.index(default) if default in options else 0,
+        format_func=format_func,
+        key=key,
+    )
+
+
+def _section_title(label):
+    st.markdown(
+        f'<div class="recipe-form-section-title">{html.escape(label)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def _preference_badges(recipe):
     badges = []
     people = [
@@ -125,74 +155,84 @@ def _preference_badges(recipe):
 
 def _recipe_form(defaults, form_key, submit_label):
     with st.form(form_key, enter_to_submit=False):
-        st.markdown(f"##### {t('recipes.form.basic')}")
-        top_left, top_right = st.columns([2, 1])
-        with top_left:
+        _section_title(t("recipes.form.basic"))
+        name_col, prep_col = st.columns([2.2, 0.8], vertical_alignment="bottom")
+        with name_col:
             name = st.text_input(t("recipes.name"), value=defaults.get("name", ""), key=f"{form_key}_name")
-            tags = st.text_input(
-                t("recipes.tags"),
-                value=defaults.get("tags", ""),
-                placeholder=t("recipes.tags_placeholder"),
-                key=f"{form_key}_tags",
-            )
-        with top_right:
-            category_value = defaults.get("category", DEFAULT_CATEGORIES[0])
-            category = st.selectbox(
-                t("recipes.category"),
-                DEFAULT_CATEGORIES,
-                index=DEFAULT_CATEGORIES.index(category_value) if category_value in DEFAULT_CATEGORIES else 0,
-                format_func=category_label,
-                key=f"{form_key}_category",
-            )
-            difficulty_value = defaults.get("difficulty", "Közepes")
-            difficulty = st.selectbox(
-                t("recipes.difficulty"),
-                RECIPE_DIFFICULTIES,
-                index=RECIPE_DIFFICULTIES.index(difficulty_value) if difficulty_value in RECIPE_DIFFICULTIES else 1,
-                format_func=difficulty_label,
-                key=f"{form_key}_difficulty",
-            )
+        with prep_col:
             prep_time_minutes = st.number_input(
                 t("recipes.prep_time"),
                 min_value=0,
                 value=int(defaults.get("prep_time_minutes", 30)),
+                step=5,
                 key=f"{form_key}_prep_time",
             )
 
-        st.markdown(f"##### {t('recipes.form.recipe')}")
-        ingredients_text = st.text_area(
-            t("common.ingredients"),
-            value=defaults.get("ingredients_text", ""),
-            height=110,
-            key=f"{form_key}_ingredients",
-        )
-        instructions_text = st.text_area(
-            t("common.instructions"),
-            value=defaults.get("instructions_text", ""),
-            height=140,
-            key=f"{form_key}_instructions",
+        category_col, difficulty_col = st.columns(2)
+        with category_col:
+            category_value = defaults.get("category", DEFAULT_CATEGORIES[0])
+            category = _choice_control(
+                t("recipes.category"),
+                DEFAULT_CATEGORIES,
+                category_value if category_value in DEFAULT_CATEGORIES else DEFAULT_CATEGORIES[0],
+                f"{form_key}_category",
+                format_func=category_label,
+            )
+            difficulty_value = defaults.get("difficulty", "Közepes")
+        with difficulty_col:
+            difficulty = _choice_control(
+                t("recipes.difficulty"),
+                RECIPE_DIFFICULTIES,
+                difficulty_value if difficulty_value in RECIPE_DIFFICULTIES else RECIPE_DIFFICULTIES[1],
+                f"{form_key}_difficulty",
+                format_func=difficulty_label,
+            )
+        tags = st.text_input(
+            t("recipes.tags"),
+            value=defaults.get("tags", ""),
+            placeholder=t("recipes.tags_placeholder"),
+            key=f"{form_key}_tags",
         )
 
-        st.markdown(f"##### {t('recipes.form.preferences')}")
-        pref_left, pref_right = st.columns(2)
+        _section_title(t("recipes.form.recipe"))
+        ingredients_col, instructions_col = st.columns([1, 1.1])
+        with ingredients_col:
+            ingredients_text = st.text_area(
+                t("common.ingredients"),
+                value=defaults.get("ingredients_text", ""),
+                height=170,
+                key=f"{form_key}_ingredients",
+            )
+        with instructions_col:
+            instructions_text = st.text_area(
+                t("common.instructions"),
+                value=defaults.get("instructions_text", ""),
+                height=170,
+                key=f"{form_key}_instructions",
+            )
+
+        _section_title(t("recipes.form.preferences"))
+        pref_left, pref_right, submit_col = st.columns([1, 1, 0.9], vertical_alignment="bottom")
         tibi_default = _preference_value(defaults.get("favorite_tibi", False), defaults.get("dislike_tibi", False))
         melinda_default = _preference_value(defaults.get("favorite_melinda", False), defaults.get("dislike_melinda", False))
-        tibi_preference = pref_left.selectbox(
-            "Tibi",
-            PREFERENCE_KEYS,
-            index=PREFERENCE_KEYS.index(tibi_default),
-            format_func=_preference_label,
-            key=f"{form_key}_pref_tibi",
-        )
-        melinda_preference = pref_right.selectbox(
-            "Melinda",
-            PREFERENCE_KEYS,
-            index=PREFERENCE_KEYS.index(melinda_default),
-            format_func=_preference_label,
-            key=f"{form_key}_pref_melinda",
-        )
-
-        submitted = st.form_submit_button(submit_label)
+        with pref_left:
+            tibi_preference = _choice_control(
+                "Tibi",
+                PREFERENCE_KEYS,
+                tibi_default,
+                f"{form_key}_pref_tibi",
+                format_func=_preference_label,
+            )
+        with pref_right:
+            melinda_preference = _choice_control(
+                "Melinda",
+                PREFERENCE_KEYS,
+                melinda_default,
+                f"{form_key}_pref_melinda",
+                format_func=_preference_label,
+            )
+        with submit_col:
+            submitted = st.form_submit_button(submit_label, use_container_width=True)
 
     data = {
         "name": name.strip(),
@@ -219,7 +259,17 @@ def render_recipes_page():
 
     if st.session_state["show_create_recipe_form"]:
         with st.container(border=True):
-            st.markdown(f"### {t('recipes.new')}")
+            st.markdown(
+                dedent(
+                    f"""
+                    <div class="recipe-create-hero">
+                        <div class="recipe-create-eyebrow">{html.escape(t("recipes.title"))}</div>
+                        <div class="recipe-create-title">{html.escape(t("recipes.new"))}</div>
+                    </div>
+                    """,
+                ).strip(),
+                unsafe_allow_html=True,
+            )
             submitted, data = _recipe_form(
                 {
                     "name": "",

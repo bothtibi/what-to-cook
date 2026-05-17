@@ -1,3 +1,59 @@
+.recipe-create-hero {
+    border: 1px solid #e7e9f0;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 0.9rem;
+    background:
+        linear-gradient(135deg, rgba(124, 92, 232, 0.12), rgba(20, 184, 166, 0.08)),
+        #ffffff;
+    box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+}
+
+.recipe-create-eyebrow {
+    color: #5b35d5;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.recipe-create-title {
+    color: #101828;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.recipe-form-section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0.85rem 0 0.45rem;
+    color: #101828;
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+
+.recipe-form-section-title::before {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #7c5ce8, #14b8a6);
+    box-shadow: 0 0 0 4px rgba(124, 92, 232, 0.1);
+}
+
+.recipe-create-hero + [data-testid="stForm"] {
+    border-color: #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.recipe-create-hero + [data-testid="stForm"] textarea {
+    min-height: 170px;
+}
+
 .recipe-row {
     display: grid;
     grid-template-columns: 82px 1fr;
